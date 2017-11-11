@@ -4,6 +4,7 @@ from scipy.interpolate import RectBivariateSpline
 import os
 import sys
 import matplotlib.pyplot as plt
+from region import region
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -11,6 +12,7 @@ from mpl_toolkits.mplot3d import Axes3D
 class terrain:
 	def __init__(self):
 		gdal.UseExceptions()
+		self.load_region("data_terrain/regions")
 		
 	def getFileNames(folder,file_ending):
 		
@@ -22,6 +24,42 @@ class terrain:
 				if ext in file_ending:
 					only_files.append(os.path.join(root,name))
 		return only_files
+
+	def load_region(self,file_location):
+		files = terrain.getFileNames(file_location,".csv")
+
+		regions_in = []
+		regions_out = []
+		for single_file in files:
+			if 'in' in single_file and 'out' not in single_file:
+				point_set=np.genfromtxt(single_file,delimiter=',')
+				if np.isnan(point_set).any():
+					print("Issue with csv: " + single_file)
+				regions_in.append(region(point_set))
+			elif 'out' in single_file:
+				regions_out.append(region(np.genfromtxt(single_file,delimiter=',')))
+				if np.isnan(point_set).any():
+					print("Issue with csv: " + single_file)
+		self.regions_in = regions_in
+		self.regions_out = regions_out
+	
+	def in_region(self,points):
+		temp_points = points
+		indices = np.arange(0,points.shape[0],1)
+		for single_region in self.regions_out:
+			contained = single_region.in_region(temp_points)
+			temp_points = np.delete(temp_points,np.where(contained),axis=0)
+			indices = np.delete(indices,np.where(contained),axis=0)
+		out_indices = []
+		for single_region in self.regions_in:
+			contained = single_region.in_region(temp_points)
+			out_indices.extend(list(indices[np.where(contained)]))
+			temp_points = np.delete(temp_points,np.where(contained))
+			indices = np.delete(indices,np.where(contained))
+		out_indices = np.array(out_indices,dtype=int)
+		all_in = np.zeros(points.shape[0],dtype=bool)
+		all_in[out_indices] = True
+		return all_in
 
 	def load_elevation(self,file_location):
 		file_names = terrain.getFileNames(file_location,('.img'))
@@ -79,13 +117,11 @@ class terrain:
 		topo[topo==0] = np.nan
 		
 		if flat:
-			print("test")
 			fig = plt.figure(frameon=False)
 			plt.imshow(topo, cmap=cm.BrBG_r)
 			plt.axis('off')
 			cbar = plt.colorbar(shrink=0.75)
 			cbar.set_label('meters')
-			#plt.savefig('kauai.png', dpi=300, bbox_inches='tight')
 			plt.show()
 
 		if not flat:
@@ -101,11 +137,12 @@ class terrain:
 def main():
 	ground = terrain()
 	ground.load_elevation("data_terrain/elevation")
-	#ground.visualize_elevation(flat=False)
+	ground.visualize_elevation(flat=True)
 	#ground.calc_slopes()
 	#ground.visualize_gradients()
 
-	print(ground.height_at_coordinates(np.transpose(np.array([[-111.2,41],[-111.3,41.01]]))))
+	#print(ground.height_at_coordinates(np.transpose(np.array([[-111.2,41],[-111.3,41.01]]))))
+	#print(ground.in_region(np.array([[-111,41],[-111.1,41],[-111,41.1],[-111.8,41.1],[-111.83,41.12],[-111.793,41.06],[-111.789,41.08]])))
 
 if __name__ == "__main__":
 	main()
