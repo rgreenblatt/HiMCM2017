@@ -46,7 +46,6 @@ class terrain:
 		ax = fig.add_subplot(111, aspect='equal')
 
 		box = self.box_region()
-		print(box)	
 		ax.set_xlim(box[0,0],box[1,0])
 		ax.set_ylim(box[0,1],box[1,1])
 	
@@ -54,11 +53,11 @@ class terrain:
 			topo = self.data_array
 			topo[topo==0] = np.nan
 			
-			plt.imshow(topo, cmap=cm.BrBG_r)
+			plt.imshow(topo, extent=[self.x_bounds[0],self.x_bounds[1],self.y_bounds[0],self.y_bounds[1]], cmap=cm.BrBG_r)
 			cbar = plt.colorbar(shrink=0.75)
 			cbar.set_label('meters')
 
-		patch = PolygonPatch(self.regions.polygon, facecolor=[0,0,0.5], edgecolor=[1,1,1], alpha=1.0) 
+		patch = PolygonPatch(self.regions.polygon, facecolor=[0,0,0.5], edgecolor=[1,1,1], alpha=0.5) 
 		ax.add_patch(patch) 
 		plt.show()			
 
@@ -153,7 +152,7 @@ def main():
 
 	#print(ground.gradient_at_coordinates(np.transpose(np.array([[-111.2,41],[-111.3,41.01]]))))
 	#print(ground.in_region(np.array([[-111,41],[-111.1,41],[-111,41.1],[-111.8,41.1],[-111.83,41.12],[-111.793,41.06],[-111.789,41.08]])))
-	ground.visualize_region()
+	ground.visualize_region(on_elevation=True)
 
 if __name__ == "__main__":
 	main()
