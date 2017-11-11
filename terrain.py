@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from region import region
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
-
+from descartes import PolygonPatch
 
 class terrain:
 	def __init__(self):
@@ -28,38 +28,40 @@ class terrain:
 	def load_region(self,file_location):
 		files = terrain.getFileNames(file_location,".csv")
 
-		regions_in = []
-		regions_out = []
+		points = []
 		for single_file in files:
 			if 'in' in single_file and 'out' not in single_file:
 				point_set=np.genfromtxt(single_file,delimiter=',')
 				if np.isnan(point_set).any():
 					print("Issue with csv: " + single_file)
-				regions_in.append(region(point_set))
+				points.extend(point_set)
 			elif 'out' in single_file:
-				regions_out.append(region(np.genfromtxt(single_file,delimiter=',')))
+				point_set=np.genfromtxt(single_file,delimiter=',')
 				if np.isnan(point_set).any():
 					print("Issue with csv: " + single_file)
-		self.regions_in = regions_in
-		self.regions_out = regions_out
+				points.extend(point_set)
+		self.regions = region(points)
 	
 	def in_region(self,points):
-		temp_points = points
-		indices = np.arange(0,points.shape[0],1)
-		for single_region in self.regions_out:
-			contained = single_region.in_region(temp_points)
-			temp_points = np.delete(temp_points,np.where(contained),axis=0)
-			indices = np.delete(indices,np.where(contained),axis=0)
-		out_indices = []
-		for single_region in self.regions_in:
-			contained = single_region.in_region(temp_points)
-			out_indices.extend(list(indices[np.where(contained)]))
-			temp_points = np.delete(temp_points,np.where(contained))
-			indices = np.delete(indices,np.where(contained))
-		out_indices = np.array(out_indices,dtype=int)
-		all_in = np.zeros(points.shape[0],dtype=bool)
-		all_in[out_indices] = True
-		return all_in
+		contained = self.regions.in_region(points)
+		return contained
+
+	def visualize_region(self,on_elevation=False):
+
+		fig = plt.figure()
+		plt.axis('off')
+
+		if on_elevation:
+			topo = self.data_array
+			topo[topo==0] = np.nan
+			
+			plt.imshow(topo, cmap=cm.BrBG_r)
+			cbar = plt.colorbar(shrink=0.75)
+			cbar.set_label('meters')
+
+		patch = PolygonPatch(self.regions, facecolor=[0,0,0.5], edgecolor=[1,1,1], alpha=1.0) 
+		ax.add_patch(patch) 
+		plt.show()			
 
 	def load_elevation(self,file_location):
 		file_names = terrain.getFileNames(file_location,('.img'))
@@ -80,6 +82,10 @@ class terrain:
 
 		self.interp = RectBivariateSpline(self.x_vals,self.y_vals,self.data_array)
 
+		gradients = self.calc_slopes()
+		self.gradX = RectBivariateSpline(self.x_vals,self.y_vals,gradients[0])
+		self.gradY = RectBivariateSpline(self.x_vals,self.y_vals,gradients[1])
+
 	def height_at_coordinates(self,coordinate):
 		return self.interp(coordinate[0],coordinate[1],grid=False)
 
@@ -91,6 +97,11 @@ class terrain:
 		distances = np.sqrt(np.square(np.square(path[:-1]-path[1:]),axis=0))
 
 		return np.sum(distances)
+	def gradient_at_coordinates(self,coordinate):
+		gradX=self.gradX(coordinate[0],coordinate[1],grid=False)
+		gradY=self.gradY(coordinate[0],coordinate[1],grid=False)
+		
+		return np.array([gradX,gradY])
 
 	def calc_slopes(self):
 		gradients = np.gradient(self.data_array,self.data_resolution)
@@ -137,12 +148,13 @@ class terrain:
 def main():
 	ground = terrain()
 	ground.load_elevation("data_terrain/elevation")
-	ground.visualize_elevation(flat=True)
+	#ground.visualize_elevation(flat=True)
 	#ground.calc_slopes()
 	#ground.visualize_gradients()
 
-	#print(ground.height_at_coordinates(np.transpose(np.array([[-111.2,41],[-111.3,41.01]]))))
+	print(ground.gradient_at_coordinates(np.transpose(np.array([[-111.2,41],[-111.3,41.01]]))))
 	#print(ground.in_region(np.array([[-111,41],[-111.1,41],[-111,41.1],[-111.8,41.1],[-111.83,41.12],[-111.793,41.06],[-111.789,41.08]])))
+	#ground.visualize_region()
 
 if __name__ == "__main__":
 	main()
