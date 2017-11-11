@@ -1,6 +1,6 @@
 from osgeo import gdal
 import numpy as np
-import scipy
+from scipy.interpolate import RectBivariateSpline
 import os
 import sys
 import matplotlib.pyplot as plt
@@ -27,7 +27,7 @@ class terrain:
 		file_names = terrain.getFileNames(file_location,('.img'))
 		
 		geo = gdal.Open(file_names[0])
-		self.data_array = geo.ReadAsArray()
+		self.data_array = np.flip(geo.ReadAsArray(),axis=1)
 		
 		self.x_bounds = (-112.000555555294,-110.999444444905)
 		self.y_bounds = (40.9994444447063,42.0005555550957)
@@ -36,19 +36,14 @@ class terrain:
 
 		self.data_resolution = abs(self.x_bounds[1]-self.x_bounds[0])/float(self.data_array.shape[0])*deg_to_feet
 
-		x = np.linspace(self.x_bounds[0],self.x_bounds[1],num=self.data_array.shape[0])
-		y = np.linspace(self.y_bounds[1],self.y_bounds[0],num=self.data_array.shape[0])
-		self.x_points,self.y_points = np.meshgrid(x,y)
+		self.x_vals = np.linspace(self.x_bounds[0],self.x_bounds[1],num=self.data_array.shape[0])
+		self.y_vals  = np.linspace(self.y_bounds[0],self.y_bounds[1],num=self.data_array.shape[0])
+		self.x_points,self.y_points = np.meshgrid(self.x_vals,self.y_vals)
+
+		self.interp = RectBivariateSpline(self.x_vals,self.y_vals,self.data_array)
 
 	def height_at_coordinates(self,coordinate):
-		bad_coords = np.where(self.x_bounds[0] <= coordinate[0] <= self.x_bounds[1] or self.y_bounds[0] <= coordinate[1] <= self.y_bounds[1], False, True)
-		if np.sum(bad_coords) > 1:
-			print("Bad coordinates: " + str(numpy.where(bad_coords)))
-			coordinate = np.delete(coordinate,numpy.where(bad_coords))
-
-		interp = scipy.interpolate.interp2d(self.x_points,self.y_points,self.data_array,kind='cubic')
-
-		return interp(coordinate)
+		return self.interp(coordinate[0],coordinate[1],grid=False)
 
 	def length_of_path(self,path):
 		heights = self.height_at_coordinates(path)
@@ -109,6 +104,8 @@ def main():
 	#ground.visualize_elevation(flat=False)
 	#ground.calc_slopes()
 	#ground.visualize_gradients()
+
+	print(ground.height_at_coordinates(np.transpose(np.array([[-111.2,41],[-111.3,41.01]]))))
 
 if __name__ == "__main__":
 	main()
