@@ -6,14 +6,18 @@ import matplotlib.pyplot as plt
 class paths:
 	def __init__(self):
 		self.spline = None
+		self.resolution = 100
 		pass
 
 	def set_points(self,points):
 		self.point_array = points
 		self.spline, u = splprep(points,s=0)
 
+	def set_resolution(resolution):
+		self.resolution = resolution
+
 	def draw_spline(self):
-		locations = self.calc_locations(100)
+		locations = self.calc_locations(self.resolution)
 		fig, ax = plt.subplots()
 		ax.plot(self.point_array[0],self.point_array[1],'bo')
 		ax.plot(locations[0],locations[1], 'r-')
