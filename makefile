@@ -2,11 +2,11 @@ vpath %.cpp src
 CC=g++
 CFLAGS=-c -Wall -g
 LDFLAGS= -Wall -g
-SOURCES=test.cpp
+SOURCES=main.cpp
 INCLUDE=-Iinclude
-LIBS=-lm -lqwt
+LIBS=-lm
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=HiMCM
+EXECUTABLE=HiMCM.exe
 
 all: $(SOURCES) $(EXECUTABLE)
     
