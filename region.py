@@ -19,6 +19,13 @@ class region:
                                         only_files.append(os.path.join(root,name))
                 return only_files
 
+	def load_single_region(self,name_in, names_out):
+		self.points_in = np.genfromtxt(name_in,delimiter=',')
+		self.points_out = []
+		for name in names_out:
+			self.points_out.append(np.genfromtxt(name,delimiter=',')[::-1])
+		self.polygon = Polygon(self.points_in,self.points_out)
+
 	def load_region(self,file_location):
 		files = region.getFileNames(file_location,".csv")
 		
@@ -31,13 +38,13 @@ class region:
 					print("Issue with csv: " + single_file)
 				points_in.extend(point_set)
 			elif 'out' in single_file:
-				point_set=np.genfromtxt(single_file,delimiter=',')
+				point_set=np.genfromtxt(single_file,delimiter=',')[::-1]
 				if np.isnan(point_set).any():
 					print("Issue with csv: " + single_file)
 				points_out.extend(point_set)
 		self.points_in = points_in
 		self.points_out = points_out
-		self.polygon = Polygon(points_in,[points_out[::-1]])
+		self.polygon = Polygon(points_in,[points_out])
 
 	def in_region(self,check_points):
 		contained = []
@@ -47,8 +54,8 @@ class region:
 		contained = numpy.array(contained)
 		return contained
 def main():
-	reg = region(numpy.array([[1,1],[2,2],[3,1]]))
-	print(reg.in_region(numpy.array([[1,1.5],[0.5,0.5],[1.3,1.4],[2,1.5]])))
+	reg = region()
+	#print(reg.in_region(numpy.array([[1,1.5],[0.5,0.5],[1.3,1.4],[2,1.5]])))
 
 if __name__ == "__main__":
 	main()
