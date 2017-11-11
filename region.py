@@ -1,11 +1,43 @@
 import numpy
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
+import os
+import numpy as np
 
 class region:
-	def __init__(self,points):
-		self.points = points
-		self.polygon = Polygon(points)
+	def __init__(self):
+		pass
+
+	def getFileNames(folder,file_ending):
+
+                only_files = []
+
+                for root, dirs, files in os.walk(folder):
+                        for name in files:
+                                (base, ext) = os.path.splitext(name)
+                                if ext in file_ending:
+                                        only_files.append(os.path.join(root,name))
+                return only_files
+
+	def load_region(self,file_location):
+		files = region.getFileNames(file_location,".csv")
+		
+		points_in = []
+		points_out = []
+		for single_file in files:
+			if 'in' in single_file and 'out' not in single_file:
+				point_set=np.genfromtxt(single_file,delimiter=',')
+				if np.isnan(point_set).any():
+					print("Issue with csv: " + single_file)
+				points_in.extend(point_set)
+			elif 'out' in single_file:
+				point_set=np.genfromtxt(single_file,delimiter=',')
+				if np.isnan(point_set).any():
+					print("Issue with csv: " + single_file)
+				points_out.extend(point_set)
+		self.points_in = points_in
+		self.points_out = points_out
+		self.polygon = Polygon(points_in,[points_out[::-1]])
 
 	def in_region(self,check_points):
 		contained = []
