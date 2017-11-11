@@ -22,6 +22,7 @@ proj4=4.9.2=0
 python=3.5.4=0
 readline=6.2=2
 setuptools=36.4.0=py35_1
+shapely=1.5.16=py35_0
 sqlite=3.13.0=0
 tk=8.5.18=0
 wheel=0.29.0=py35_0
