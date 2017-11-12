@@ -1,4 +1,4 @@
-import numpy as np
+import numpy
 import random
 import deap
 
@@ -12,51 +12,28 @@ MUTPB = .03
 
 # Organisms will probably be treated as graphs with points representing the entry and exit points
 class Resort_Map():
-    def __init__(self, chair_set, trail_set):
-        self.chair_set = chair_set # chair set is a list of arrays specifying chair end points
-
-        self.trail_set = trail_set # trail_set is a list of arrays specifying the trails
+    def __init__(self, num1, num2):
+        self.num1 = num1
+        self.num2 = num2
         self.fitness = None
-
-    def make_trail(self, chair):
-        # Karna and Ryan will write this
-        # Given the endpoints of a chair, find a path for a 
-        curr = chair[1]
-        bottom = chair[0]
-        path = []
-        while mag(curr - bottom) < 200:
-            dir = (bottom - curr)/mag(bottom-curr)
-            theta = np.pi*(random.random()*15-30)/180
-            dir = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), -np.cos(theta)]]).dot(dir)
-            curr += dir * 50
-
-    def make_path():
-        pass
-
-    def make_chair(self, point1, point2):
-        
-
-def mag(a1):
-    return np.sqrt(a1.dot(a1))
+    def __str__(self):
+        return "("+str(self.num1)+", "+str(self.num2)+")   " + str(self.fitness)
 
 def fitness(trail_map):
-    #TODO: trail_map gives chair endpoints as list, followed by list of trail points. 
-    # Ryan will write a fitness function    
-
-    pass
+    return 50 - abs(50-trail_map.num1-trail_map.num2)
 
 def mutate(child):
-    #TODO:Take the top point of some trails. Draw new paths to the bottom. 
-    pass
+    child.num1 = child.num1 + random.random() * 5
+    child.num2 = child.num2 + random.random() * 5
 
 def cross(parent1, parent2):
-    #TODO: Take the bottom points of chairlifts. 
-    # This function must modify parent1 and parent2
-    pass
+    stuff = parent1.num2
+    parent1.num2 = parent2.num2
+    parent2.num2 = stuff
 
 def rand_map():
     # Return a map object
-    out = Resort_Map([], [])
+    out = Resort_Map(random.random()*50, random.random()*50)
     
     # Allocate chair lifts
 
@@ -64,7 +41,7 @@ def rand_map():
 
     return out
 
-def driver(NGEN=10, CXPB=.5, MUTPB=.1):
+def driver(NGEN=10, CXPB=.5, MUTPB=.2):
     # Initialize our fitness function
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
@@ -77,18 +54,16 @@ def driver(NGEN=10, CXPB=.5, MUTPB=.1):
     toolbox.register("individual", rand_map)
 
     # Register the population
-    toolbox.register("population", tools.initRepeat, list, toolbox.individual, n=100)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual, n=10)
 
     toolbox.register("mate", cross)
     toolbox.register("mutate", mutate)
-    toolbox.register("select", tools.selTournament, tournsize=5)
+    toolbox.register("select", tools.selTournament, tournsize=3)
     toolbox.register("evaluate", fitness)
 
     pop = toolbox.population()
-
-    invalid = [ind for ind in pop if ind.fitness=None]
-    fitnesses = list(toolbox.map(toolbox.evaluate, invalid))
-    for ind, fit in zip(invalid, fitnesses):
+    fitnesses = list(toolbox.map(toolbox.evaluate, pop))
+    for ind, fit in zip(pop, fitnesses):
         ind.fitness = fit
 
     for g in range(NGEN):
@@ -108,13 +83,14 @@ def driver(NGEN=10, CXPB=.5, MUTPB=.1):
                 toolbox.mutate(mutant)
                 mutant.fitness = None
 
-        invalid = [ind for ind in offspring if ind.fitness=None]
-        fitnesses = list(toolbox.map(toolbox.evaluate, invalid))
+        invalid = [ind for ind in offspring if ind.fitness==None]
+        fitnesses = toolbox.map(toolbox.evaluate, invalid)
         for ind, fit in zip(invalid, fitnesses):
             ind.fitness = fit
 
         # Replace the population with the offspring
         pop[:] = offspring
+        print('\n'.join([str(k) for k in pop]))
 
     fittest = pop[0]
     fit = fittest.fitness
@@ -124,6 +100,5 @@ def driver(NGEN=10, CXPB=.5, MUTPB=.1):
             fittest = ind
     return (ind, fit)
 
-if __name__ == 'main':
-    test = rand_map()
-    
+sol = driver()[0]
+print(sol.num1, sol.num2)
