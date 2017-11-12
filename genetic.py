@@ -152,7 +152,7 @@ class gen_algoth:
             index=random.randint(0,1)
             currparent=chrpars[index]
             
-            child.chair_set.append(currparent.chair_set[i])
+            child.chair_set.append(currparent[i])
             
             if(BASE_LIFTS <= i): 
                 watched.append(child.chair_set[i][0])
