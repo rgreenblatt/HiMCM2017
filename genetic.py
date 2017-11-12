@@ -17,6 +17,7 @@ P2 = .4
 P3 = .4
 P4 = .4
 BASE_LIFTS = 3
+POP_SIZE = 100
 
 # Organisms will probably be treated as graphs with points representing the entry and exit points
 class Resort_Map():
@@ -38,6 +39,8 @@ class Resort_Map():
             dir = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), -np.cos(theta)]]).dot(dir)
             curr += dir * 50
 
+        self.trail_set.append(path)
+
     def make_path(self, chair):
         curr = chair[1]
         bottom = chair[0]
@@ -50,7 +53,7 @@ class Resort_Map():
             dir = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), -np.cos(theta)]]).dot(disp)
             path.append(curr+dir)
         path.append(bottom)
-        path.trail_set.append(path)
+        self.trail_set.append(path)
             
 
     def make_chair(self, bottom, top):
@@ -126,7 +129,7 @@ class gen_algoth:
                     dist = mag(lower-nearest)
             for j in range(random.randint(1,2)):
                 tmp = np.array([lower, nearest])
-                child.make_trail(tmp)
+                child.make_path(tmp)
 
             # Repeat process for path to bottom
             nearest = immutable_bottom[0]
@@ -137,7 +140,7 @@ class gen_algoth:
                     dist = mag(lower-nearest)
             for j in range(random.randint(1,2)):
                 tmp = np.array([nearest, lower])
-                child.make_trail(tmp)
+                child.make_path(tmp)
         else:
             if(BASE_LIFTS<len(child.chair_set)-1):
                 child.rem_chair()
@@ -149,7 +152,7 @@ class gen_algoth:
             trails = random.randint(1,4)
             for i in range(trails):
                 chair = child.chair_set[random.randint(0, len(child.chair_set)-1)]
-                child.make_trail(chair)
+                child.make_path(chair)
         else:
             trails = random.randint(1,3)
             for i in range(trails):
@@ -191,9 +194,11 @@ class gen_algoth:
 
     def cross(parent1,parent2):
         child1 = gen_algoth.cross_helper(parent1,parent2)
-        child2 = gen_algoth.cross_helper(parent1,parent2)
-        parent1 = child1
-        parent2 = child2
+        child2 = gen_algoth.cross_helper(parent2,parent1)
+        parent1.trail_set = child1.trail_set
+        parent1.chair_set = child1.chair_set
+        parent2.trail_set = child2.trail_set
+        parent2.chair_set = child2.chair_set
 
     def cross_helper(parent1,parent2):
         chrlens=(len(parent1.chair_set),len(parent2.chair_set))
@@ -275,7 +280,7 @@ class gen_algoth:
             chair = out.chair_set[i]
             if i < BASE_LIFTS:
                 for j in range(random.randint(4,7)):
-                    out.make_trail(chair)
+                    out.make_path(chair)
             else:
                 nearest = immutable_peaks[0]
                 dist = mag(chair[0] - nearest)
@@ -285,7 +290,7 @@ class gen_algoth:
                         dist = mag(peak - chair[0])
                 for j in range(random.randint(1,3)):
                     tmp = np.array([chair[0], nearest])
-                    out.make_trail(tmp)
+                    out.make_path(tmp)
 
                 # Repeat process for path to bottom
                 nearest = immutable_bottom[0]
@@ -296,13 +301,13 @@ class gen_algoth:
                         dist = mag(base - chair[0])
                 for j in range(random.randint(1,3)):
                     tmp = np.array([nearest, chair[0]])
-                    out.make_trail(tmp)
+                    out.make_path(tmp)
                 for j in range(random.randint(3,5)):
-                    out.make_trail(chair)
+                    out.make_path(chair)
 
         return out
 
-    def driver(NGEN=NGEN, CXPB=CXPB, MUTPB=MUTPB):
+    def driver(NGEN=NGEN, CXPB=CXPB, MUTPB=MUTPB, POP_SIZE=POP_SIZE):
         # Initialize our fitness function
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
@@ -315,7 +320,7 @@ class gen_algoth:
         toolbox.register("individual", gen_algoth.rand_map)
 
         # Register the population
-        toolbox.register("population", tools.initRepeat, list, toolbox.individual, n=100)
+        toolbox.register("population", tools.initRepeat, list, toolbox.individual, n=POP_SIZE)
 
         toolbox.register("mate", gen_algoth.cross)
         toolbox.register("mutate", gen_algoth.mutate)
@@ -331,9 +336,12 @@ class gen_algoth:
         for ind, fit in zip(invalid, fitnesses):
             ind.fitness = fit
         
+        total_fitness = 0
         for g in range(NGEN):
-            sys.stdout.write("\rRunning generation " + str(g) + "\033[K")
+            sys.stdout.write("\rRunning generation " + str(g) + " Average Fitness: {}".format(total_fitness/POP_SIZE) + "\033[K")
             offspring = toolbox.select(pop, len(pop))
+    
+            total_fitness = 0
 
             # Clone selected
             offspring = list(map(toolbox.clone, offspring))
@@ -356,6 +364,7 @@ class gen_algoth:
 
             # Replace the population with the offspring
             pop[:] = offspring
+            total_fitness = sum([ind.fitness for ind in pop])
         print("")
 
         fittest = pop[0]
