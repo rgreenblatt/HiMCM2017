@@ -5,11 +5,12 @@ import deap
 from deap import base
 from deap import creator
 from deap import tools
+from terrain import terrain
 
 NGEN = 10
 CXPB = .3
 MUTPB = .03
-
+BASEH= 400
 # Organisms will probably be treated as graphs with points representing the entry and exit points
 class Resort_Map():
     def __init__(self, chair_set, trail_set):
@@ -52,12 +53,13 @@ def mutate(child):
 def cross(parent1, parent2):
     #TODO: Take the bottom points of chairlifts. 
     # This function must modify parent1 and parent2
-    pass
 
+        
+        
 def rand_map():
     # Return a map object
     out = Resort_Map([], [])
-    
+        
     # Allocate chair lifts
 
     # Allocate trails
