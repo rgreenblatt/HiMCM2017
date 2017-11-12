@@ -54,6 +54,23 @@ class Resort_Map():
             path.append(curr+dir)
         path.append(bottom)
         self.trail_set.append(path)
+
+    def owned_by(self, trail):
+        for chair in self.chair_set:
+            if chair[1] == trail[0] and chair[0] == trail[-1]:
+                return chair
+            elif trail[0] == chair[0]:
+                return chair
+        return None 
+
+    def trails_owned(self, chair):
+        out = []
+        for trail in self.trail_set:
+            if trail[0] == chair[1] and trail[-1] == chair[0]:
+                out.append(trail)
+            elif trail[0] == chair[0]:
+                out.append(trail)
+        return out
             
 
     def make_chair(self, bottom, top):
@@ -344,7 +361,7 @@ class gen_algoth:
         progression_max = []
         for g in range(NGEN):
             sys.stdout.write("\rRunning generation " + str(g) + " Average Fitness: {}".format(total_fitness/POP_SIZE) + "\033[K")
-            offspring = toolbox.select(pop, len(pop))
+            selected = toolbox.select(pop, POP_SIZE)
     
             total_fitness = 0
 
