@@ -113,14 +113,14 @@ def fitness(individual, ground):
 				
 		penalty+=np.sum(ground.in_region(np.transpose(points)))*-.1
 
-	print(paths)
+#	print(paths)
 	
 	pathDiff = diff.difficulty(paths,ground)
 	green = np.where(pathDiff == 0, 1, 0)
 	blue = np.where(pathDiff == 1, 1, 0)
 	black = np.where(pathDiff == 2, 1, 0)
 
-	#print(pathDiff)
+	print(pathDiff)
 
 	greenLength = np.sum(green*pathLengths)	
 	blueLength = np.sum(blue*pathLengths)	

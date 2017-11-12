@@ -4,13 +4,21 @@ from terrain import terrain
 def dist(p1,p2):
     return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
 
+def deg_to_feet(deg_in):
+    for i in range(len(deg_in)):
+        deg_in[i] = deg_in[i] * 11030.
+    return deg_in
+
 def difficulty(paths,ground):
     out=[]
    
     for path in paths:
-        maxer=0
-    
-        heights = ground.height_at_coordinates(np.reshape(path,(2,-1,1)))
+   
+        heights = ground.height_at_coordinates(np.reshape(np.transpose(path),(2,-1,1)))
+
+        grades = []
+
+        path = deg_to_feet(path)
 
         for i in range(1,len(path)-1):
             hm1=heights[i-1]
@@ -20,17 +28,19 @@ def difficulty(paths,ground):
             d1=dist(path[i-1],path[i])
             d2=dist(path[i+1],path[i])
             
+            print(d1)
+
             s1=abs(h-hm1)/d1
             s2=abs(hp1-h)/d2
 
-            grade=(s1+s2)/2
-            
-            if grade>maxer:
-                maxer=grade
-    
-        if maxer<0.25:
+            grades.append((s1+s2)/2)
+        maximum = np.max(grades)        
+
+        print(maximum)
+
+        if maximum<0.25:
             out.append(0)
-        elif maxer>0.25 and maxer<0.4:
+        elif maximum>0.25 and maximum<0.4:
             out.append(1)
         else:
             out.append(2)

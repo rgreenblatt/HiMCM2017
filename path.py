@@ -8,7 +8,7 @@ class paths:
 		self.spline = None
 		self.resolution = 100
 		if points != None:
-            self.set_points(points)
+			self.set_points(points)
 
 	def set_points(self,points):
 		self.point_array = points

@@ -9,6 +9,8 @@ from path import paths as path_lib
 from terrain import terrain
 from tMap import Resort_Map
 
+import difficulty
+
 def visualize_elevation(ground,flat=False,x_vals=None,y_vals=None,image_resolution=(512,512)):
         if x_vals == None:
             x_vals = np.linspace(ground.overall_box[0,0],ground.overall_box[1,0],image_resolution[0])
@@ -100,12 +102,18 @@ def visualize_resort(ground,resort,image_resolution=(512,512)):
     for lift in resort.chair_set:
         lift_line = path_lib(lift)
         points = np.transpose(lift_line.calc_locations(200))
-        ax.plot(points[0],points[1],color='grey',lw=2)
+        ax.plot(points[0],points[1],color='red',lw=2)
 
     print("Adding slopes")
     
+    point_arrays = []
     for trail in resort.trail_set:
-        points = np.transpose(trail.calc_locations(200))
+        point_arrays.append(np.transpose(trail.calc_locations(200)))
+    
+    difficulties = difficulty(point_arrays,ground)
+    
+    for difficulty 
+        
         ax.plot(points[0],points[1],color='red',lw=2)
 
     print("Showing plot")

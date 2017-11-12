@@ -166,7 +166,7 @@ class gen_algoth:
         return child
 
     def chair_location(num_chairs):
-        point_array = np.transpose(gen_algoth.GROUND.regions.get_random_points(2*num_chairs))
+        point_array = gen_algoth.GROUND.regions.get_random_points(2*num_chairs)
         point_array = np.reshape(point_array,(2,-1,1))
         heights = gen_algoth.GROUND.height_at_coordinates(np.array(point_array))
 
