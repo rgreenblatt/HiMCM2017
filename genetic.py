@@ -39,6 +39,8 @@ class Resort_Map():
             dir = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), -np.cos(theta)]]).dot(dir)
             curr += dir * 50
 
+        self.trail_set.append(path)
+
     def make_path(self, chair):
         curr = chair[1]
         bottom = chair[0]
@@ -51,7 +53,7 @@ class Resort_Map():
             dir = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), -np.cos(theta)]]).dot(disp)
             path.append(curr+dir)
         path.append(bottom)
-        path.trail_set.append(path)
+        self.trail_set.append(path)
             
 
     def make_chair(self, bottom, top):
@@ -127,7 +129,7 @@ class gen_algoth:
                     dist = mag(lower-nearest)
             for j in range(random.randint(1,2)):
                 tmp = np.array([lower, nearest])
-                child.make_trail(tmp)
+                child.make_path(tmp)
 
             # Repeat process for path to bottom
             nearest = immutable_bottom[0]
@@ -138,7 +140,7 @@ class gen_algoth:
                     dist = mag(lower-nearest)
             for j in range(random.randint(1,2)):
                 tmp = np.array([nearest, lower])
-                child.make_trail(tmp)
+                child.make_path(tmp)
         else:
             if(BASE_LIFTS<len(child.chair_set)-1):
                 child.rem_chair()
@@ -150,7 +152,7 @@ class gen_algoth:
             trails = random.randint(1,4)
             for i in range(trails):
                 chair = child.chair_set[random.randint(0, len(child.chair_set)-1)]
-                child.make_trail(chair)
+                child.make_path(chair)
         else:
             trails = random.randint(1,3)
             for i in range(trails):
@@ -278,7 +280,7 @@ class gen_algoth:
             chair = out.chair_set[i]
             if i < BASE_LIFTS:
                 for j in range(random.randint(4,7)):
-                    out.make_trail(chair)
+                    out.make_path(chair)
             else:
                 nearest = immutable_peaks[0]
                 dist = mag(chair[0] - nearest)
@@ -288,7 +290,7 @@ class gen_algoth:
                         dist = mag(peak - chair[0])
                 for j in range(random.randint(1,3)):
                     tmp = np.array([chair[0], nearest])
-                    out.make_trail(tmp)
+                    out.make_path(tmp)
 
                 # Repeat process for path to bottom
                 nearest = immutable_bottom[0]
@@ -299,9 +301,9 @@ class gen_algoth:
                         dist = mag(base - chair[0])
                 for j in range(random.randint(1,3)):
                     tmp = np.array([nearest, chair[0]])
-                    out.make_trail(tmp)
+                    out.make_path(tmp)
                 for j in range(random.randint(3,5)):
-                    out.make_trail(chair)
+                    out.make_path(chair)
 
         return out
 
