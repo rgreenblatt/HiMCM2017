@@ -35,7 +35,7 @@ class terrain:
 		contained = self.regions.in_region(points)
 		return contained
 
-	def visualize_region(self,on_elevation=False,image_resolution=(4096,4096)):
+	def visualize_region(self,on_elevation=False,image_resolution=(512,512)):
 
 		print("Visualizing Region")
 
@@ -326,7 +326,7 @@ def main():
 
 	#print(ground.gradient_at_coordinates(np.transpose(np.array([[-111.2,41],[-111.3,41.01]]))))
 	#print(ground.in_region(np.array([[-111,41],[-111.1,41],[-111,41.1],[-111.8,41.1],[-111.83,41.12],[-111.793,41.06],[-111.789,41.08]])))
-	#ground.visualize_region(on_elevation=True)
+	ground.visualize_region(on_elevation=True)
 
 if __name__ == "__main__":
 	main()
