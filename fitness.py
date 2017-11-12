@@ -4,6 +4,7 @@ import congest
 import path
 from terrain import terrain
 from region import region
+import difficulty as diff
 
 regionBottom = -111.8285
 regionTop = -111.806
@@ -43,7 +44,8 @@ areas = np.flatten(area)
 
 
 def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCapacities):
-	totalPathLength = np.sum(np.apply_along_axis(ground.length_of_path, 0, 	paths))
+	pathLengths = np.apply_along_axis(ground.length_of_path, 0, paths)
+	totalPathLength = np.sum(pathLengths)
 	
 	penalty = 0
 	
@@ -61,8 +63,17 @@ def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCa
 		lengthsPerPartition = #TODO: some function here on paths (probably in terrain.py as it needs partition data)
 		
 		
-		numberOfEachDifficulty = #TODO:some function here on paths which judges difficulty
-		varietyScores = var.variety(numberOfEachDifficulty, lengthsPerPartition, partitionAreas)
+		pathDiff = diff.difficulty(paths)
+		green = np.where(pathDiff == 0, 1, 0)
+		blue = np.where(pathDiff == 1, 1, 0)
+		black = np.where(pathDiff == 2, 1, 0)
+
+		greenLength = np.sum(green*pathLengths)	
+		blueLength = np.sum(blue*pathLengths)	
+		blackLength = np.sum(black*pathLengths)
+		lengthByDiff = np.array([greenLength, blueLength, blackLength])
+		
+		varietyScores = var.variety(lengthByDiff, lengthsPerPartition, areas)
 
 		liftDistance = []
 		skiTimeDown = []
