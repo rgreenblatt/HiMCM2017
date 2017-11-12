@@ -5,7 +5,9 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from descartes import PolygonPatch
 from region import region
-from paths import path as path_lib
+from path import paths as path_lib
+from terrain import terrain
+from tMap import Resort_Map
 
 def visualize_elevation(ground,flat=False,x_vals=None,y_vals=None,image_resolution=(512,512)):
         if x_vals == None:
@@ -35,7 +37,7 @@ def visualize_elevation(ground,flat=False,x_vals=None,y_vals=None,image_resoluti
             plt.axis('off')
             plt.show()
 
-def visualize_region(ground,on_elevation=True,image_resolution=(512,512))
+def visualize_region(ground,on_elevation=True,image_resolution=(512,512)):
     
     print("Visualizing Region")
 
@@ -60,7 +62,7 @@ def visualize_region(ground,on_elevation=True,image_resolution=(512,512))
         cbar.set_label('feet')
 
     print("Adding regions")
-    patch = PolygonPatch(self.regions.polygon, facecolor=[0,0,0.5], edgecolor=[1,1,1], alpha=0.5)
+    patch = PolygonPatch(ground.regions.polygon, facecolor=[0,0,0.5], edgecolor=[1,1,1], alpha=0.5)
     ax.add_patch(patch)
     print("Showing plot")
     plt.ylabel('Latitude Degrees North')
@@ -90,32 +92,41 @@ def visualize_resort(ground,resort,image_resolution=(512,512)):
     cbar.set_label('feet')
 
     print("Adding regions")
-    patch = PolygonPatch(self.regions.polygon, facecolor=[0,0,0.5], edgecolor=[1,1,1], alpha=0.25)
+    patch = PolygonPatch(ground.regions.polygon, facecolor=[0,0,0.5], edgecolor=[1,1,1], alpha=0.25)
     ax.add_patch(patch)
 
     print("Adding Ski Lifts")
 
+    for lift in resort.chair_set:
+        lift_line = path_lib(lift)
+        points = np.transpose(lift_line.calc_locations(200))
+        ax.plot(points[0],points[1],color='grey',lw=2)
+
     print("Adding slopes")
+    
+    for trail in resort.trail_set:
+        points = np.transpose(trail.calc_locations(200))
+        ax.plot(points[0],points[1],color='red',lw=2)
 
     print("Showing plot")
     plt.ylabel('Latitude Degrees North')
     plt.xlabel('Longitude Degrees West')
     plt.show()
 
- def visualize_gradients(self,x_vals=None,y_vals=None,image_resolution=(512,512)):
-        #gradients = self.calc_slopes()
-        if x_vals == None:
-            x_vals = np.linspace(self.overall_box[0,0],self.overall_box[1,0],image_resolution[0])
-            y_vals = np.linspace(self.overall_box[0,1],self.overall_box[1,1],image_resolution[1])
-        x,y=np.meshgrid(x_vals,y_vals)
-        gradients = self.gradient_at_coordinates(np.array([x,y]))
-        gradients[gradients == 0] = None
-        fig = plt.figure()
-        plt.imshow(np.sqrt(gradients[0]*gradients[0]+gradients[1]*gradients[1]), cmap=cm.BrBG_r)
-        plt.axis('off')
-        cbar = plt.colorbar(shrink=0.75)
-        cbar.set_label('meters')
-        plt.show()
+def visualize_gradients(ground,x_vals=None,y_vals=None,image_resolution=(512,512)):
+    #gradients = self.calc_slopes()
+    if x_vals == None:
+        x_vals = np.linspace(ground.overall_box[0,0],ground.overall_box[1,0],image_resolution[0])
+        y_vals = np.linspace(ground.overall_box[0,1],ground.overall_box[1,1],image_resolution[1])
+    x,y=np.meshgrid(x_vals,y_vals)
+    gradients = ground.gradient_at_coordinates(np.array([x,y]))
+    gradients[gradients == 0] = None
+    fig = plt.figure()
+    plt.imshow(np.sqrt(gradients[0]*gradients[0]+gradients[1]*gradients[1]), cmap=cm.BrBG_r)
+    plt.axis('off')
+    cbar = plt.colorbar(shrink=0.75)
+    cbar.set_label('meters')
+    plt.show()
 
 def mtnplot(mountain,runs):
     fig = plt.figure()
@@ -134,7 +145,9 @@ def mtnplot(mountain,runs):
     plt.show()
 
 def main():
-    pass
+    ground = terrain()
+
+    visualize_region(ground)
 
 if __name__=="__main__":
     main()
