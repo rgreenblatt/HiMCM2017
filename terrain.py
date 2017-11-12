@@ -253,13 +253,13 @@ class terrain:
 
 
 	def gradient_at_coordinates(self,coordinate):
-		gradX = np.zeros(coordinate.shape)
-		gradY = np.zeros(coordinate.shape)
+		gradX = np.zeros((coordinate.shape[1],coordinate.shape[2]))
+		gradY = np.zeros((coordinate.shape[1],coordinate.shape[2]))
 		
 		coordinate = self.sort_by_data_set(coordinate)
 		for area,gradFuncX,gradFuncY in zip(coordinate,self.gradX,self.gradY):
-			gradX[area[1]]=gradFuncX(area[0,0],area[0,1],grid=False)
-			gradY[area[1]]=gradFuncY(area[0,0],area[0,1],grid=False)
+			gradX[area[1][0],area[1][1]]=gradFuncX(area[0,0],area[0,1],grid=False)
+			gradY[area[1][0],area[1][1]]=gradFuncY(area[0,0],area[0,1],grid=False)
 		
 		return np.array([gradX,gradY])
 
@@ -317,13 +317,13 @@ class terrain:
 def main():
 	ground = terrain()
 	ground.load_elevation("data_terrain/elevation")
-	#ground.visualize_elevation(flat=True)
+	ground.visualize_elevation(flat=True)
 	#ground.calc_slopes()
 	#ground.visualize_gradients()
 
 	#print(ground.gradient_at_coordinates(np.transpose(np.array([[-111.2,41],[-111.3,41.01]]))))
 	#print(ground.in_region(np.array([[-111,41],[-111.1,41],[-111,41.1],[-111.8,41.1],[-111.83,41.12],[-111.793,41.06],[-111.789,41.08]])))
-	ground.visualize_region(on_elevation=True)
+	#ground.visualize_region(on_elevation=True)
 
 if __name__ == "__main__":
 	main()

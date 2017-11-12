@@ -3,6 +3,7 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 import os
 import numpy as np
+import sys
 
 class region:
 	def __init__(self):
@@ -36,6 +37,7 @@ class region:
 		points_in = []
 		points_out = []
 		for single_file in files:
+			sys.stdout.write('\rLoading region: ' + single_file + '\033[K')
 			if 'in' in single_file and 'out' not in single_file:
 				point_set=np.genfromtxt(single_file,delimiter=',')
 				if np.isnan(point_set).any():
