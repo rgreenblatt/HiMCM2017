@@ -7,6 +7,7 @@ import sys
 from deap import base, creator, tools, algorithms
 
 from terrain import terrain
+from fitness import fitness
 
 NGEN = 10000
 CXPB = .6
@@ -91,11 +92,6 @@ def mag(a1):
 class gen_algoth:
   
     GROUND = terrain()
-  
-    def fitness(trail_map):
-        #TODO: trail_map gives chair endpoints as list, followed by list of trail points. 
-        # Ryan will write a fitness function    
-        return random.random()
 
     def mutate(child):
         #TODO:Take the top point of some trails. Draw new paths to the bottom. 
@@ -193,11 +189,11 @@ class gen_algoth:
                         delta = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), -np.cos(theta)]]).dot(disp)
                         trail[ind] = curr+delta            
 
-
-    def cross(parent1, parent2):
-        #TODO: Take the bottom points of chairlifts. 
-        # This function must modify parent1 and parent2
-        pass
+    def cross(parent1,parent2):
+        child1 = gen_algoth.cross_helper(parent1,parent2)
+        child2 = gen_algoth.cross_helper(parent1,parent2)
+        parent1 = child1
+        parent2 = child2
 
     def cross_helper(parent1,parent2):
         chrlens=(len(parent1.chair_set),len(parent2.chair_set))
@@ -324,7 +320,7 @@ class gen_algoth:
         toolbox.register("mate", gen_algoth.cross)
         toolbox.register("mutate", gen_algoth.mutate)
         toolbox.register("select", tools.selTournament, tournsize=5)
-        toolbox.register("evaluate", gen_algoth.fitness)
+        toolbox.register("evaluate", fitness)
 
         pop = toolbox.population()
 
