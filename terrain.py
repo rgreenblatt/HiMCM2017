@@ -1,4 +1,4 @@
-from osgeo import gdal
+from osgeo import gdal, ogr, osr
 import numpy as np
 from scipy.interpolate import RectBivariateSpline
 import os
@@ -34,58 +34,213 @@ class terrain:
 		contained = self.regions.in_region(points)
 		return contained
 
-	def box_region(self):
-		points = np.array(self.regions.points_in)
-		
-		return np.array([np.min(points,axis=0),np.max(points,axis=0)])
+	def visualize_region(self,on_elevation=False,image_resolution=(4096,4096)):
 
-	def visualize_region(self,on_elevation=False):
+		print("Visualizing Region")
 
 		fig = plt.figure()
 
 		ax = fig.add_subplot(111, aspect='equal')
 
-		box = self.box_region()
-		ax.set_xlim(box[0,0],box[1,0])
-		ax.set_ylim(box[0,1],box[1,1])
+		ax.set_xlim(self.overall_box[0,0],self.overall_box[1,0])
+		ax.set_ylim(self.overall_box[0,1],self.overall_box[1,1])
 	
 		if on_elevation:
-			topo = self.data_array
+			print("Getting elevation data")
+			x_vals = np.linspace(self.overall_box[0,0],self.overall_box[1,0],image_resolution[0])
+			y_vals = np.linspace(self.overall_box[0,1],self.overall_box[1,1],image_resolution[1])
+			x,y=np.meshgrid(x_vals,y_vals)
+			topo = self.height_at_coordinates(np.array([x,y]))
 			topo[topo==0] = np.nan
 			
-			plt.imshow(topo, extent=[self.x_bounds[0],self.x_bounds[1],self.y_bounds[0],self.y_bounds[1]], cmap=cm.BrBG_r)
+			print("Adding elevation data to plot")
+			plt.imshow(topo, extent=[self.overall_box[0,0],self.overall_box[1,0],self.overall_box[1,1],self.overall_box[0,1]], cmap=cm.BrBG_r)
 			cbar = plt.colorbar(shrink=0.75)
-			cbar.set_label('meters')
+			cbar.set_label('feet')
 
+		print("Adding regions")
 		patch = PolygonPatch(self.regions.polygon, facecolor=[0,0,0.5], edgecolor=[1,1,1], alpha=0.5) 
-		ax.add_patch(patch) 
+		ax.add_patch(patch)
+		print("Showing plot")
+		plt.ylabel('Latitude Degrees North')
+		plt.xlabel('Longitude Degrees West')
 		plt.show()			
 
+	def GetExtent(gt,cols,rows):
+		''' Return list of corner coordinates from a geotransform
+	
+			@type gt:   C{tuple/list}
+			@param gt: geotransform
+			@type cols:   C{int}
+			@param cols: number of columns in the dataset
+			@type rows:   C{int}
+			@param rows: number of rows in the dataset
+			@rtype:    C{[float,...,float]}
+			@return:   coordinates of each corner
+		'''
+		ext=[]
+		xarr=[0,cols]
+		yarr=[0,rows]
+		
+		for px in xarr:
+			for py in yarr:
+				x=gt[0]+(px*gt[1])+(py*gt[2])
+				y=gt[3]+(px*gt[4])+(py*gt[5])
+				ext.append([x,y])
+			yarr.reverse()
+		return ext
+
+	def ReprojectCoords(coords,src_srs,tgt_srs):
+		''' Reproject a list of x,y coordinates.
+			
+			@type geom:     C{tuple/list}
+			@param geom:    List of [[x,y],...[x,y]] coordinates
+			@type src_srs:  C{osr.SpatialReference}
+			@param src_srs: OSR SpatialReference object
+			@type tgt_srs:  C{osr.SpatialReference}
+			@param tgt_srs: OSR SpatialReference object
+			@rtype:         C{tuple/list}
+			@return:        List of transformed [[x,y],...[x,y]] coordinates
+		'''
+		trans_coords=[]
+		transform = osr.CoordinateTransformation( src_srs, tgt_srs)
+		for x,y in coords:
+			x,y,z = transform.TransformPoint(x,y)
+			trans_coords.append([x,y])
+		return trans_coords
+	def get_bounds(ds):	
+		gt=ds.GetGeoTransform()
+		cols = ds.RasterXSize
+		rows = ds.RasterYSize
+		ext=terrain.GetExtent(gt,cols,rows)
+		
+		src_srs=osr.SpatialReference()
+		src_srs.ImportFromWkt(ds.GetProjection())
+		#tgt_srs=osr.SpatialReference()
+		#tgt_srs.ImportFromEPSG(4326)
+		tgt_srs = src_srs.CloneGeogCS()
+		
+		geo_ext=terrain.ReprojectCoords(ext,src_srs,tgt_srs)
+		return [geo_ext[0],geo_ext[2]]
+
 	def load_elevation(self,file_location):
+		print("Loading Elevation Data")
 		file_names = terrain.getFileNames(file_location,('.img'))
 		
-		geo = gdal.Open(file_names[0])
-		self.data_array = np.flip(geo.ReadAsArray(),axis=1)
-		
-		self.x_bounds = (-112.000555555294,-110.999444444905)
-		self.y_bounds = (40.9994444447063,42.0005555550957)
-
 		deg_to_feet=110030.
+		
+		self.overall_box = self.regions.box_region()
+		
+		data_array = []
+		x_bounds = []
+		y_bounds = []
+		data_resolution = []
+		x_vals = []
+		y_vals = []
+		x_points = []
+		y_points = []
+		interp = []
+		gradients = []
+		gradX = []
+		gradY = []
 
-		self.data_resolution = abs(self.x_bounds[1]-self.x_bounds[0])/float(self.data_array.shape[0])*deg_to_feet
+		for single_name in file_names:
+			sys.stdout.write('\rStarted Loading file: ' + single_name + '\033[K')
+			geo = gdal.Open(single_name)
+			data_array_single = geo.ReadAsArray()
+			data_array_single = np.transpose(data_array_single)
+			sys.stdout.write('\rCalculating bounds of ' + single_name + '\033[K')			
+			bounds = terrain.get_bounds(geo)		
 
-		self.x_vals = np.linspace(self.x_bounds[0],self.x_bounds[1],num=self.data_array.shape[0])
-		self.y_vals  = np.linspace(self.y_bounds[0],self.y_bounds[1],num=self.data_array.shape[0])
-		self.x_points,self.y_points = np.meshgrid(self.x_vals,self.y_vals)
+			if bounds[0][0] < bounds[1][0]:
+				x_bounds_single = (bounds[0][0],bounds[1][0])
+			else:
+				x_bounds_single = (bounds[1][0],bounds[0][0])
+				data_array_single = np.flip(data_array_single,axis=1)			
 
-		self.interp = RectBivariateSpline(self.x_vals,self.y_vals,self.data_array)
+			if bounds[0][1] < bounds[1][1]:
+				y_bounds_single = (bounds[0][1],bounds[1][1])
+			else:
+				y_bounds_single = (bounds[1][1],bounds[0][1])
+				data_array_single = np.flip(data_array_single,axis=1)
+	
 
-		gradients = self.calc_slopes()
-		self.gradX = RectBivariateSpline(self.x_vals,self.y_vals,gradients[0])
-		self.gradY = RectBivariateSpline(self.x_vals,self.y_vals,gradients[1])
+			sys.stdout.write('\rGenerating point coordinates for ' + single_name + '\033[K')
+
+			data_resolution_single = abs(x_bounds_single[1]-x_bounds_single[0])/float(data_array_single.shape[0])*deg_to_feet
+			data_resolution.append(data_resolution_single)
+	
+			x_vals_single = np.linspace(x_bounds_single[0],x_bounds_single[1],num=data_array_single.shape[0])
+			y_vals_single = np.linspace(y_bounds_single[0],y_bounds_single[1],num=data_array_single.shape[0])
+
+			x,y = np.meshgrid(x_vals_single,y_vals_single)
+
+			included_points = np.where(np.logical_and(np.logical_and(self.overall_box[0,0] <= x,self.overall_box[1,0] > x),np.logical_and(self.overall_box[0,1] <= y,self.overall_box[1,1] > y)))
+
+			x = x[included_points]
+			y = y[included_points]
+			x_points.append(x)
+			y_points.append(y)
+			
+			x_indices = np.where(np.logical_and(self.overall_box[0,0] <=x_vals_single,self.overall_box[1,0] > x_vals_single))
+			y_indices = np.where(np.logical_and(self.overall_box[0,1] <=y_vals_single,self.overall_box[1,1] > y_vals_single))
+			x_vals_single = x_vals_single[x_indices]
+			y_vals_single = y_vals_single[y_indices]
+			x_vals.append(x_vals_single)
+			y_vals.append(y_vals_single)		
+
+			data_array_single = data_array_single[x_indices]
+			data_array_single = data_array_single[:,y_indices[0]]
+			data_array.append(data_array_single)		
+
+			x_bounds_single = [max(x_bounds_single[0],self.overall_box[0,0]),min(x_bounds_single[1],self.overall_box[1,0])]
+			y_bounds_single = [max(y_bounds_single[0],self.overall_box[0,1]),min(y_bounds_single[1],self.overall_box[1,1])]
+			x_bounds.append(x_bounds_single)
+			y_bounds.append(y_bounds_single)
+			
+			sys.stdout.write('\rBuilding interpolation function for ' + single_name + ' heights\033[K')
+
+			interp.append(RectBivariateSpline(x_vals_single,y_vals_single,data_array_single))
+	
+			sys.stdout.write('\rDifferentiating and interpolating gradients for ' + single_name + '\033[K')
+
+			gradients_single = terrain.calc_slopes(data_array_single,data_resolution_single)
+			gradients.append(gradients_single)
+			gradX.append(RectBivariateSpline(x_vals_single,y_vals_single,gradients_single[0]))
+			gradY.append(RectBivariateSpline(x_vals_single,y_vals_single,gradients_single[1]))
+			
+			sys.stdout.write('\rDone loading ' + single_name + '\n')
+
+		self.data_array = data_array
+		self.x_bounds = x_bounds
+		self.y_bounds = y_bounds
+		self.data_resolution = data_resolution
+		self.x_vals = x_vals
+		self.y_vals = y_vals
+		self.x_points = x_points
+		self.y_points = y_points
+		self.interp = interp
+		self.gradients = gradients
+		self.gradX = gradX
+		self.gradY = gradY
+
+		print("Done loading regions. Loaded " + str(len(file_names)) + " regions")
+
+	def sort_by_data_set(self,coordinates):
+		out_array = []
+		for x,y in zip(self.x_bounds, self.y_bounds):
+			indices = np.where(np.logical_and(np.logical_and(x[0] <= coordinates[0], coordinates[0] < x[1]), np.logical_and(y[0] <= coordinates[1], coordinates[1] < y[1])))
+			out_array.append([coordinates[:,indices[0],indices[1]],indices])
+		return out_array
 
 	def height_at_coordinates(self,coordinate):
-		return self.interp(coordinate[0],coordinate[1],grid=False)
+		interpolated = np.zeros((coordinate.shape[1],coordinate.shape[2]))
+
+		coordinate = self.sort_by_data_set(coordinate)
+		for area,interpolater in zip(coordinate,self.interp):
+			inter_value = interpolater(area[0][0],area[0][1],grid=False)
+			interpolated[area[1][0],area[1][1]] = inter_value
+		return interpolated
 
 	def length_of_path(self,path):
 		heights = self.height_at_coordinates(path)
@@ -95,14 +250,21 @@ class terrain:
 		distances = np.sqrt(np.square(np.square(path[:-1]-path[1:]),axis=0))
 
 		return np.sum(distances)
+
+
 	def gradient_at_coordinates(self,coordinate):
-		gradX=self.gradX(coordinate[0],coordinate[1],grid=False)
-		gradY=self.gradY(coordinate[0],coordinate[1],grid=False)
+		gradX = np.zeros(coordinate.shape)
+		gradY = np.zeros(coordinate.shape)
+		
+		coordinate = self.sort_by_data_set(coordinate)
+		for area,gradFuncX,gradFuncY in zip(coordinate,self.gradX,self.gradY):
+			gradX[area[1]]=gradFuncX(area[0,0],area[0,1],grid=False)
+			gradY[area[1]]=gradFuncY(area[0,0],area[0,1],grid=False)
 		
 		return np.array([gradX,gradY])
 
-	def calc_slopes(self):
-		gradients = np.gradient(self.data_array,self.data_resolution)
+	def calc_slopes(data_array,data_resolution):
+		gradients = np.gradient(data_array,data_resolution)
 		return gradients
 
 	def gradient_directions(self):
@@ -111,9 +273,14 @@ class terrain:
 	def percent_slopes(self):
 		pass
 
-	def visualize_gradients(self):
-		gradients = self.calc_slopes()
-
+	def visualize_gradients(self,x_vals=None,y_vals=None,image_resolution=(512,512)):
+		#gradients = self.calc_slopes()
+		if x_vals == None:
+			x_vals = np.arange(self.overall_box[0,0],self.overall_box[1,0],image_resolution[0])
+			y_vals = np.arange(self.overall_box[0,1],self.overall_box[1,1],image_resolution[1])
+		x,y=np.meshgrid(x_vals,y_vals)
+		gradients = self.gradient_at_coordinates([x,y])
+		gradients[gradients == 0] = None
 		fig = plt.figure()
 		plt.imshow(np.sqrt(gradients[0]*gradients[0]+gradients[1]*gradients[1]), cmap=cm.BrBG_r)
 		plt.axis('off')
@@ -121,8 +288,12 @@ class terrain:
 		cbar.set_label('meters')
 		plt.show()
 
-	def visualize_elevation(self,flat=False):
-		topo = self.data_array
+	def visualize_elevation(self,flat=False,x_vals=None,y_vals=None):
+		if x_vals == None:
+			x_vals = np.arange(self.overall_box[0,0],self.overall_box[1,0],image_resolution[0])
+			y_vals = np.arange(self.overall_box[0,1],self.overall_box[1,1],image_resolution[1])
+		x,y=np.meshgrid(x_vals,y_vals)
+		topo = self.height_at_coordinates(x,y)
 		topo[topo==0] = np.nan
 		
 		if flat:
@@ -139,7 +310,7 @@ class terrain:
 			
 			ax.set_zlim(0,10000)
 
-			surf = ax.plot_surface(self.x_points,self.y_points,topo)
+			surf = ax.plot_surface(x,y,topo)
 			plt.axis('off')
 			plt.show()
 

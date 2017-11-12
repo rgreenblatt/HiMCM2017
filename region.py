@@ -26,6 +26,10 @@ class region:
 			self.points_out.append(np.genfromtxt(name,delimiter=',')[::-1])
 		self.polygon = Polygon(self.points_in,self.points_out)
 
+	def box_region(self):
+		points = np.array(self.points_in)
+		return np.array([np.min(points,axis=0),np.max(points,axis=0)])
+
 	def load_region(self,file_location):
 		files = region.getFileNames(file_location,".csv")
 		
