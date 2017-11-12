@@ -18,6 +18,7 @@ region5 = 41.08927
 region6 = 41.112
 region7 = 41.14
 
+
 regionX = np.array([region1, region2,region3,region4,region5,region6,region7])
 regionY = np.array([regionBottom, regionTop])
 
@@ -48,10 +49,12 @@ for i in range(len(regions1)):
 		area[i][k] = reg.intersection(regions1[i],regions2[k]).area
 areas = area.flatten()
 
-weights = {"regionalVariation" : .33333, "difficulty" : .33333, "congenstion" : .33333}
+weights = {"regionalVariation" : .33333, "difficulty" : .33333, "congestion" : .33333}
 totalPeople = 4000
-liftSpeeds = 100
-descentSpeed = 100
+liftSpeeds = 16.4
+descentSpeed = 32808.4
+liftChairSize = 4
+
 
 def feet_to_deg(feet):
 	return feet / 11030.
@@ -82,19 +85,16 @@ def fitness(individual, ground):
 		penalty += (3-len(lifts))*-.4
 	
 	#finds lengths of trails in each partition
-	lengthsByRegion = np.zeros((regionX.shape[0]+1,regionY.shape[0]+1))
+	lengthsByRegion = np.zeros((regionX.shape[0],regionY.shape[0]+1))
 	for path,points in zip(paths,path_points):
 			
 		tmp_pnt = np.array(points)
 		x_regions = []
-		x_regions.append(points[0]<regionX[0])
 		for i in range(regionX.shape[0]-1):
 			x_regions.append(np.logical_and(regionX[i] <= points[0], points[0] < regionX[i+1]))
 		#print((regionX[:-1] <= np.repeat([points],6,axis=0) < regionX[1:]))
-		x_regions.append(points[0] >= regionX[-1])
-		
+		x_regions.append(points[1] >= regionX[-1])	
 		y_regions = []
-		y_regions.append(points[1]<regionY[0])
 		for i in range(regionY.shape[0]-1):
 			y_regions.append(np.logical_and(regionY[i] <= points[1], points[1] < regionY[i+1]))
 	
@@ -112,14 +112,15 @@ def fitness(individual, ground):
 					lengthsByRegion[i,k]+=ground.length_of_path(temp_path)
 				
 		penalty+=np.sum(ground.in_region(np.transpose(points)))*-.1
-
+	lengthsByRegion = lengthsByRegion.flatten()
 #	print(paths)
 	
 	pathDiff = diff.difficulty(paths,ground)
 	green = np.where(pathDiff == 0, 1, 0)
 	blue = np.where(pathDiff == 1, 1, 0)
 	black = np.where(pathDiff == 2, 1, 0)
-
+	
+	print("Printing pathDiffs")
 	print(pathDiff)
 
 	greenLength = np.sum(green*pathLengths)	
@@ -131,6 +132,12 @@ def fitness(individual, ground):
 	#print(lengthsByRegion)
 	#print(areas)
 	
+	print("Printing lengthsByDiff")
+	print(lengthByDiff)
+	print("Printing lengthsByRegion")
+	print(lengthsByRegion)
+	print("Printing areas")
+	print(areas)	
 	varietyScores = var.variety(lengthByDiff, lengthsByRegion, areas)
 
 	liftDistance = []
@@ -146,7 +153,7 @@ def fitness(individual, ground):
 	liftTimeToTop = np.array(liftDistance)/liftSpeeds
 	
 
-	trailLengthsPerLift = np.zeros((len(lifts)) 
+	trailLengthsPerLift = np.zeros((len(lifts))) 
 	i=0
 	for lift in lifts:
 		lengthByLift = 0
@@ -154,7 +161,8 @@ def fitness(individual, ground):
 			lengthByLift+=ground.length_of_path(paths[index])		 
 		trailLengthsPerLift[i] = lengthByLift
 		i+=1
-		
+	
+	liftCapacity = np.array([200]*len(lifts)) #FIXXXXX TODO TODO
 	congestScore = congest.congFitness(totalPeople, trailLengthsPerLift,  liftCapacity, liftTimeToTop, skiTimeDown) 
 	return weights["regionalVariation"]*varietyScores[0]+weights["difficulty"]*varietyScores[1]+weights["congestion"]*congestScore+penalty
 	

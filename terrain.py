@@ -199,22 +199,29 @@ class terrain:
 		out_array = []
 		for x,y in zip(self.x_bounds, self.y_bounds):
 			indices = np.where(np.logical_and(np.logical_and(x[0] <= coordinates[0], coordinates[0] < x[1]), np.logical_and(y[0] <= coordinates[1], coordinates[1] < y[1])))
-			out_array.append([coordinates[:,indices[0],indices[1]],indices])
+			if len(indices) == 2:
+				out_array.append([coordinates[:,indices[0],indices[1]],indices])
+			if len(indices) == 1:
+				out_array.append([coordinates[:,indices[0]],indices])
 		return out_array
 
-	def height_at_coordinates(self,coordinate):
-		interpolated = np.zeros((coordinate.shape[1],coordinate.shape[2]))
+	def height_at_coordinates(self,coordinate_in):
+		interpolated = np.zeros(coordinate_in.shape[1:])
 
-		coordinate = self.sort_by_data_set(coordinate)
+		coordinate = self.sort_by_data_set(coordinate_in)
 		for area,interpolater in zip(coordinate,self.interp):
 			inter_value = interpolater(area[0][0],area[0][1],grid=False)
-			interpolated[area[1][0],area[1][1]] = inter_value
+			print(area)
+			if len(coordinate_in.shape) == 2:
+				interpolated[area[1][0]] = inter_value
+			if len(coordinate_in.shape) == 3:
+				interpolated[area[1][0],area[1][1]] = inter_value
 		return interpolated
 
 	def length_of_path(self,path):
 		heights = self.height_at_coordinates(path)
 
-		path = np.concatenate((path,[heights]),axis=0)
+		path = 11030.*np.concatenate((path,[heights]),axis=0)
 		
 		distances = np.sqrt(np.sum(np.square(path[:-1]-path[1:]),axis=0))
 

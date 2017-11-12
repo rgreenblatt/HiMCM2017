@@ -52,12 +52,12 @@ class Resort_Map():
         out = []
         i = 0
         for trail in self.trail_set:
-            if trail[0] == chair[1] and trail[-1] == chair[0]:
+            if(np.all(trail[0] == chair[1]) and np.all(trail[-1] == chair[0])):
                 out.append(trail)
-            elif trail[0] == chair[0]:
+            elif (np.all(np.array(trail[0] == chair[0]))):
                 out.append(i)
             i+=1
-	return out
+        return out
 
 
     def make_chair(self, bottom, top):
