@@ -38,15 +38,19 @@ class gen_algoth:
         return fitness(individual, gen_algoth.GROUND)
 
     def mutate(child):
+        
         #TODO:Take the top point of some trails. Draw new paths to the bottom. 
         if random.random() < P1:
             gen_algoth.mutate1(child)
         if random.random() < P2:
             gen_algoth.mutate2(child)
+        '''
         if random.random() < P3:
             gen_algoth.mutate3(child)
         if random.random() < P4:
             gen_algoth.mutate4(child)
+        '''
+        pass
 
     def mutate1(child): # Add/Remove Ski Lift
         choice = random.randint(0,1)
@@ -99,6 +103,9 @@ class gen_algoth:
             for i in range(trails):
                 if child.trail_set:
                     child.trail_set.pop(random.randint(0, len(child.trail_set)-1))
+        
+        if len(np.array(child.chair_set).shape) < 3:
+                print(np.array(child.chair_set).shape)
 
 
     def mutate3(child): # Add/Remove Midpoints
