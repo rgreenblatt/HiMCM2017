@@ -12,7 +12,7 @@ from tMap import Resort_Map
 
 NGEN = 10000
 CXPB = .6
-MUTPB = .03
+MUTPB = .3
 P1 = .1
 P2 = .4
 P3 = .4
@@ -28,7 +28,13 @@ class gen_algoth:
   
     GROUND = terrain()
 
+    run_count = 0
+
     def call_fitness(individual):
+        gen_algoth.run_count += 1
+        print(gen_algoth.run_count)
+        if len(np.array(individual.chair_set).shape) < 3:
+                print(np.array(individual.chair_set).shape)
         return fitness(individual, gen_algoth.GROUND)
 
     def mutate(child):
@@ -109,13 +115,14 @@ class gen_algoth:
                 if len(trail) > 2:
                     ind = random.randint(1, len(trail) - 2)
                     trail.pop(ind)
+        else: print("No Trails (Mut3)")
         
     def mutate4(child): # Shift Midpoints
         if len(child.trail_set) > 0:
             num_trails = random.randint(2,5)
             num_points = random.randint(2,5)
             for i in range(num_trails):
-                trail = child.trail_set[random.randint(len(child.trail_set))]
+                trail = child.trail_set[random.randint(0, len(child.trail_set)-1)]
                 for x in range(num_points):
                     if len(trail) > 2:
                         ind = random.randint(1, len(trail) - 2)
@@ -124,8 +131,10 @@ class gen_algoth:
                         delta = (bottom - curr) / 10
         
                         theta = np.pi*(random.random()*90-45)/180
-                        delta = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), -np.cos(theta)]]).dot(disp)
-                        trail[ind] = curr+delta            
+                        delta = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), -np.cos(theta)]]).dot(delta)
+                        trail[ind] = curr+delta
+
+        else: print("No Trails!")
 
     def cross(parent1,parent2):
         child1 = gen_algoth.cross_helper(parent1,parent2)
@@ -136,6 +145,12 @@ class gen_algoth:
         parent2.chair_set = child2.chair_set
 
     def cross_helper(parent1,parent2):
+        if(len(np.array(parent1.trail_set).shape)<3):
+                print(np.array(parent1.trail_set).shape)
+                print(parent1.trail_set)
+        if(len(np.array(parent2.trail_set).shape)<3):
+                print(np.array(parent2.trail_set).shape)
+                print(parent2.trail_set)
         chrlens=(len(parent1.chair_set),len(parent2.chair_set))
         chrlen=chrlens[random.randint(0,1)]
         
@@ -148,21 +163,34 @@ class gen_algoth:
         child=Resort_Map([],[])
         watched=[]
         
+        back = 0
         for i in range(chrlen):
             index=random.randint(0,1)
             currparent=chrpars[index]
-            
-            child.chair_set.append(currparent[i])
-            
-            if(BASE_LIFTS <= i): 
-                watched.append(child.chair_set[i][0])
-            watched.append(child.chair_set[i][1])
+            if i < len(currparent):
+                child.chair_set.append(currparent[i])
+                
+                if(BASE_LIFTS <= i): 
+                    #watched.append(child.chair_set[i][0])
+                    watched.append((i-back,0))
+                    #watched.append(child.chair_set[i][1])
+                watched.append((i-back, 1))
+            else:
+                back += 1
 
         for i in range(trllen):
             for parent in trlpars:
-                currtrail=parent[i]
-                if currtrail[0] in watched:
-                    child.trail_set.append(currtrail)
+                if i < len(parent):
+                        currtrail=parent[i]
+                        for inds in watched:
+                                toWatch = child.chair_set[inds[0]][inds[1]]
+                                if mag(toWatch - currtrail[0]) < .0001:
+                                        child.trail_set.append(currtrail)
+
+        print(np.array(child.trail_set).shape)
+        if(len(np.array(child.trail_set).shape)<3):
+                print(np.array(child.trail_set).shape)
+                print(child.trail_set)
         return child
 
     def chair_location(num_chairs):

@@ -63,7 +63,10 @@ def feet_to_deg(feet):
 	return feet / 11030.
 
 def fitness(individual, ground):
-	paths = np.flip(individual.trail_set, axis =2)
+	if(len(np.array(individual.trail_set).shape) < 3):
+		print(np.array(individual.trail_set).shape)
+		print(individual.trail_set)
+	paths = np.flip(individual.trail_set, axis = 2)
 	lifts = individual.chair_set
 	pathLengths = []
 	path_points = []

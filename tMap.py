@@ -3,6 +3,9 @@ import random
 import path as path_lib
 import sys
 
+def mag(a):
+	return np.sqrt(a.dot(a))
+
 BASE_LIFTS = 3
 # Organisms will probably be treated as graphs with points representing the entry and exit points
 class Resort_Map():
@@ -12,6 +15,7 @@ class Resort_Map():
         self.trail_set = trail_set # trail_set is a list of arrays specifying the trails
         self.fitness = None
 #TODO: convert to feet in below function
+        '''
     def make_trail(self, chair):
         # Karna and Ryan will write this
         # Given the endpoints of a chair, find a path for a 
@@ -25,7 +29,7 @@ class Resort_Map():
             curr += dir * 50
 
         self.trail_set.append(path)
-
+        '''
     def make_path(self, chair):
         curr = chair[1]
         bottom = chair[0]
@@ -55,6 +59,8 @@ class Resort_Map():
                 out.append(i)
             elif (np.all(np.array(trail[0] == chair[0]))):
                 out.append(i)
+        if len(out) < 2:
+                print(out)
         return out
 
 
@@ -66,17 +72,18 @@ class Resort_Map():
         dead = self.chair_set[ind]
 
         #TODO: Remove this if it's not working out
+        back = 0
+        for i in range(len(self.trail_set)):
+            if mag(self.trail_set[i][0] - dead[1]) < 0.0001:
+                self.trail_set.pop(i-back)
+                back += 1
 
-        for trail in self.trail_set:
-            if trail[0] == dead[1]:
-                self.trail_set.remove(trail)
-
-            elif trail[0] == dead[0]:
+            elif mag(trail[0] - dead[0]) < 0.0001:
                 toKill = True
 
                 index = 0
                 for trail2 in self.trail_set:
-                    if trail2[-1] == dead[0]:
+                    if mag(trail[-1] - dead[0]) < 0.0001:
                         toKill = False
                         toExtend = index     
                     index += 1
@@ -84,8 +91,12 @@ class Resort_Map():
                 if not toKill:
                     self.trail_set[toExtend] += trail[1:]
     
-                self.trail_set.remove(trail)
+                self.trail_set.pop(i-back)
+                back+=1
 
-            index+=1
-                    
+        index+=1
+                   
+        if len(np.array(self.trail_set).shape) < 2:
+                print(self.trail_set)
+ 
         del self.chair_set[ind]

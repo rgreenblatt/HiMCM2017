@@ -31,6 +31,9 @@ class paths:
 		new_points = splev(u,self.spline)
 		return new_points
 
+	def find_point(self,point):
+		return splev(point,self.spline)
+
 def main():
 	path = paths()
 
