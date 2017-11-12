@@ -11,7 +11,7 @@ class Resort_Map():
 
         self.trail_set = trail_set # trail_set is a list of arrays specifying the trails
         self.fitness = None
-
+#TODO: convert out of feet in below function
     def make_trail(self, chair):
         # Karna and Ryan will write this
         # Given the endpoints of a chair, find a path for a 

@@ -1,13 +1,10 @@
 import numpy as np
 import random
+from tMap import Resort_Map
+from genetic import gen_algoth
 
-def mag(a1):
-    return np.sqrt(a1.dot(a1))
+gen = gen_algoth()
+out =  gen.rand_map()
 
-bottom = np.array([0,0])
-curr = np.array([-5,0])
-dir = (bottom - curr)/mag(bottom-curr)
-theta = np.pi*(random.random()*15-30)/180
-dir = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), -np.cos(theta)]]).dot(dir)
-
-print(dir)
+print(out.trail_set)
+print(np.array(out.chair_set))
