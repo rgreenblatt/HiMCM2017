@@ -12,8 +12,9 @@ from descartes import PolygonPatch
 class terrain:
 	def __init__(self):
 		gdal.UseExceptions()
-		self.load_region("data_terrain/regions")
-		
+		self.load_region("data_terrain/regions")	
+		self.load_elevation("data_terrain/elevation")
+	
 	def getFileNames(folder,file_ending):
 		
 		only_files = []
@@ -258,8 +259,8 @@ class terrain:
 		
 		coordinate = self.sort_by_data_set(coordinate)
 		for area,gradFuncX,gradFuncY in zip(coordinate,self.gradX,self.gradY):
-			gradX[area[1][0],area[1][1]]=gradFuncX(area[0,0],area[0,1],grid=False)
-			gradY[area[1][0],area[1][1]]=gradFuncY(area[0,0],area[0,1],grid=False)
+			gradX[area[1][0],area[1][1]]=gradFuncX(area[0][0],area[0][1],grid=False)
+			gradY[area[1][0],area[1][1]]=gradFuncY(area[0][0],area[0][1],grid=False)
 		
 		return np.array([gradX,gradY])
 
@@ -276,10 +277,10 @@ class terrain:
 	def visualize_gradients(self,x_vals=None,y_vals=None,image_resolution=(512,512)):
 		#gradients = self.calc_slopes()
 		if x_vals == None:
-			x_vals = np.arange(self.overall_box[0,0],self.overall_box[1,0],image_resolution[0])
-			y_vals = np.arange(self.overall_box[0,1],self.overall_box[1,1],image_resolution[1])
+			x_vals = np.linspace(self.overall_box[0,0],self.overall_box[1,0],image_resolution[0])
+			y_vals = np.linspace(self.overall_box[0,1],self.overall_box[1,1],image_resolution[1])
 		x,y=np.meshgrid(x_vals,y_vals)
-		gradients = self.gradient_at_coordinates([x,y])
+		gradients = self.gradient_at_coordinates(np.array([x,y]))
 		gradients[gradients == 0] = None
 		fig = plt.figure()
 		plt.imshow(np.sqrt(gradients[0]*gradients[0]+gradients[1]*gradients[1]), cmap=cm.BrBG_r)
@@ -288,20 +289,22 @@ class terrain:
 		cbar.set_label('meters')
 		plt.show()
 
-	def visualize_elevation(self,flat=False,x_vals=None,y_vals=None):
+	def visualize_elevation(self,flat=False,x_vals=None,y_vals=None,image_resolution=(512,512)):
 		if x_vals == None:
-			x_vals = np.arange(self.overall_box[0,0],self.overall_box[1,0],image_resolution[0])
-			y_vals = np.arange(self.overall_box[0,1],self.overall_box[1,1],image_resolution[1])
+			x_vals = np.linspace(self.overall_box[0,0],self.overall_box[1,0],image_resolution[0])
+			y_vals = np.linspace(self.overall_box[0,1],self.overall_box[1,1],image_resolution[1])
 		x,y=np.meshgrid(x_vals,y_vals)
-		topo = self.height_at_coordinates(x,y)
+		topo = self.height_at_coordinates(np.array([x,y]))
 		topo[topo==0] = np.nan
-		
 		if flat:
 			fig = plt.figure(frameon=False)
-			plt.imshow(topo, cmap=cm.BrBG_r)
-			plt.axis('off')
+			ax = fig.add_subplot(111, aspect='equal')
+	
+			ax.set_xlim(self.overall_box[0,0],self.overall_box[1,0])
+			ax.set_ylim(self.overall_box[0,1],self.overall_box[1,1])
+			plt.imshow(topo, extent=[self.overall_box[0,0],self.overall_box[1,0],self.overall_box[1,1],self.overall_box[0,1]], cmap=cm.BrBG_r)
 			cbar = plt.colorbar(shrink=0.75)
-			cbar.set_label('meters')
+			cbar.set_label('feet')
 			plt.show()
 
 		if not flat:
@@ -316,8 +319,8 @@ class terrain:
 
 def main():
 	ground = terrain()
-	ground.load_elevation("data_terrain/elevation")
-	ground.visualize_elevation(flat=True)
+	#ground.load_elevation("data_terrain/elevation")
+	#ground.visualize_elevation(flat=True)
 	#ground.calc_slopes()
 	#ground.visualize_gradients()
 
