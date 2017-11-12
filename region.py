@@ -27,6 +27,16 @@ class region:
 			self.points_out.append(np.genfromtxt(name,delimiter=',')[::-1])
 		self.polygon = Polygon(self.points_in,self.points_out)
 
+	def get_random_points(self,number_of_points):
+		valid_points = []
+		bounds = self.box_region()
+		while len(valid_points) < number_of_points:
+			points=np.array([np.random.uniform(bounds[0][0],bounds[1][0],number_of_points-len(valid_points)),np.random.uniform(bounds[0][1],bounds[1][1],number_of_points-len(valid_points))])
+			points = np.transpose(points)
+			valid_points.extend(points[np.where(self.in_region(points))]*11030)
+		return valid_points
+		
+
 	def box_region(self):
 		points = np.array(self.points_in)
 		return np.array([np.min(points,axis=0),np.max(points,axis=0)])
