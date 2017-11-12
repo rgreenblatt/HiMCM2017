@@ -120,8 +120,8 @@ def fitness(individual, ground):
 	blue = np.where(pathDiff == 1, 1, 0)
 	black = np.where(pathDiff == 2, 1, 0)
 	
-	print("Printing pathDiffs")
-	print(pathDiff)
+	#print("Printing pathDiffs")
+	#print(pathDiff)
 
 	greenLength = np.sum(green*pathLengths)	
 	blueLength = np.sum(blue*pathLengths)	
@@ -129,15 +129,15 @@ def fitness(individual, ground):
 	lengthByDiff = np.array([greenLength, blueLength, blackLength])
 	
 	#print(lengthByDiff)
-	#print(lengthsByRegion)
+	#print(lengthsByRegion) #TODO Enable length stuff for debug
 	#print(areas)
 	
-	print("Printing lengthsByDiff")
-	print(lengthByDiff)
-	print("Printing lengthsByRegion")
-	print(lengthsByRegion)
-	print("Printing areas")
-	print(areas)	
+	#print("Printing lengthsByDiff")
+	#print(lengthByDiff)
+	#print("Printing lengthsByRegion")
+	#print(lengthsByRegion)
+	#print("Printing areas")
+	#print(areas)	
 	varietyScores = var.variety(lengthByDiff, lengthsByRegion, areas)
 
 	liftDistance = []
