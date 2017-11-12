@@ -23,8 +23,9 @@ class region:
 	def load_single_region(self,name_in, names_out = None):
 		self.points_in = np.genfromtxt(name_in,delimiter=',')
 		self.points_out = []
-		for name in names_out:
-			self.points_out.append(np.genfromtxt(name,delimiter=',')[::-1])
+		if names_out != None:
+			for name in names_out:
+				self.points_out.append(np.genfromtxt(name,delimiter=',')[::-1])
 		self.polygon = Polygon(self.points_in,self.points_out)
 
 	def get_random_points(self,number_of_points):
