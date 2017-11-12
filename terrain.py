@@ -35,38 +35,6 @@ class terrain:
 		contained = self.regions.in_region(points)
 		return contained
 
-	def visualize_region(self,on_elevation=False,image_resolution=(512,512)):
-
-		print("Visualizing Region")
-
-		fig = plt.figure()
-
-		ax = fig.add_subplot(111, aspect='equal')
-
-		ax.set_xlim(self.overall_box[0,0],self.overall_box[1,0])
-		ax.set_ylim(self.overall_box[0,1],self.overall_box[1,1])
-	
-		if on_elevation:
-			print("Getting elevation data")
-			x_vals = np.linspace(self.overall_box[0,0],self.overall_box[1,0],image_resolution[0])
-			y_vals = np.linspace(self.overall_box[0,1],self.overall_box[1,1],image_resolution[1])
-			x,y=np.meshgrid(x_vals,y_vals)
-			topo = self.height_at_coordinates(np.array([x,y]))
-			topo[topo==0] = np.nan
-			
-			print("Adding elevation data to plot")
-			plt.imshow(topo, extent=[self.overall_box[0,0],self.overall_box[1,0],self.overall_box[1,1],self.overall_box[0,1]], cmap=cm.BrBG_r)
-			cbar = plt.colorbar(shrink=0.75)
-			cbar.set_label('feet')
-
-		print("Adding regions")
-		patch = PolygonPatch(self.regions.polygon, facecolor=[0,0,0.5], edgecolor=[1,1,1], alpha=0.5) 
-		ax.add_patch(patch)
-		print("Showing plot")
-		plt.ylabel('Latitude Degrees North')
-		plt.xlabel('Longitude Degrees West')
-		plt.show()			
-
 	def GetExtent(gt,cols,rows):
 		''' Return list of corner coordinates from a geotransform
 	
@@ -268,55 +236,6 @@ class terrain:
 		gradients = np.gradient(data_array,data_resolution)
 		return gradients
 
-	def gradient_directions(self):
-		pass
-
-	def percent_slopes(self):
-		pass
-
-	def visualize_gradients(self,x_vals=None,y_vals=None,image_resolution=(512,512)):
-		#gradients = self.calc_slopes()
-		if x_vals == None:
-			x_vals = np.linspace(self.overall_box[0,0],self.overall_box[1,0],image_resolution[0])
-			y_vals = np.linspace(self.overall_box[0,1],self.overall_box[1,1],image_resolution[1])
-		x,y=np.meshgrid(x_vals,y_vals)
-		gradients = self.gradient_at_coordinates(np.array([x,y]))
-		gradients[gradients == 0] = None
-		fig = plt.figure()
-		plt.imshow(np.sqrt(gradients[0]*gradients[0]+gradients[1]*gradients[1]), cmap=cm.BrBG_r)
-		plt.axis('off')
-		cbar = plt.colorbar(shrink=0.75)
-		cbar.set_label('meters')
-		plt.show()
-
-	def visualize_elevation(self,flat=False,x_vals=None,y_vals=None,image_resolution=(512,512)):
-		if x_vals == None:
-			x_vals = np.linspace(self.overall_box[0,0],self.overall_box[1,0],image_resolution[0])
-			y_vals = np.linspace(self.overall_box[0,1],self.overall_box[1,1],image_resolution[1])
-		x,y=np.meshgrid(x_vals,y_vals)
-		topo = self.height_at_coordinates(np.array([x,y]))
-		topo[topo==0] = np.nan
-		if flat:
-			fig = plt.figure(frameon=False)
-			ax = fig.add_subplot(111, aspect='equal')
-	
-			ax.set_xlim(self.overall_box[0,0],self.overall_box[1,0])
-			ax.set_ylim(self.overall_box[0,1],self.overall_box[1,1])
-			plt.imshow(topo, extent=[self.overall_box[0,0],self.overall_box[1,0],self.overall_box[1,1],self.overall_box[0,1]], cmap=cm.BrBG_r)
-			cbar = plt.colorbar(shrink=0.75)
-			cbar.set_label('feet')
-			plt.show()
-
-		if not flat:
-			fig = plt.figure()
-			ax = fig.gca(projection = '3d')
-			
-			ax.set_zlim(0,10000)
-
-			surf = ax.plot_surface(x,y,topo)
-			plt.axis('off')
-			plt.show()
-
 def main():
 	ground = terrain()
 	#ground.load_elevation("data_terrain/elevation")
@@ -326,7 +245,8 @@ def main():
 
 	#print(ground.gradient_at_coordinates(np.transpose(np.array([[-111.2,41],[-111.3,41.01]]))))
 	#print(ground.in_region(np.array([[-111,41],[-111.1,41],[-111,41.1],[-111.8,41.1],[-111.83,41.12],[-111.793,41.06],[-111.789,41.08]])))
-	ground.visualize_region(on_elevation=True)
+	#ground.visualize_region(on_elevation=True)
+	#ground.visualize_resort()
 
 if __name__ == "__main__":
 	main()
