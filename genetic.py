@@ -337,6 +337,8 @@ class gen_algoth:
             ind.fitness = fit
         
         total_fitness = 0
+        progression_avg = []
+        progression_max = []
         for g in range(NGEN):
             sys.stdout.write("\rRunning generation " + str(g) + " Average Fitness: {}".format(total_fitness/POP_SIZE) + "\033[K")
             offspring = toolbox.select(pop, len(pop))
@@ -364,7 +366,12 @@ class gen_algoth:
 
             # Replace the population with the offspring
             pop[:] = offspring
-            total_fitness = sum([ind.fitness for ind in pop])
+            fitness_list = [ind.fitness for ind in pop]
+            total_fitness = sum(fitness_list)
+            max_fitness = max(fitness_list)
+
+            progression_avg.append(total_fitness/POP_SIZE)
+            progression_max.append(max_fitness)
         print("")
 
         fittest = pop[0]
@@ -373,7 +380,7 @@ class gen_algoth:
             if ind.fitness > fit:
                 fit = ind.fitness
                 fittest = ind
-        return (ind, fit)
+        return (ind, fit, progression_avg, progression_max)
 
 
 if __name__ == '__main__':
