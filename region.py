@@ -3,6 +3,7 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 import os
 import numpy as np
+import sys
 
 class region:
 	def __init__(self):
@@ -26,12 +27,17 @@ class region:
 			self.points_out.append(np.genfromtxt(name,delimiter=',')[::-1])
 		self.polygon = Polygon(self.points_in,self.points_out)
 
+	def box_region(self):
+		points = np.array(self.points_in)
+		return np.array([np.min(points,axis=0),np.max(points,axis=0)])
+
 	def load_region(self,file_location):
 		files = region.getFileNames(file_location,".csv")
 		
 		points_in = []
 		points_out = []
 		for single_file in files:
+			sys.stdout.write('\rLoading region: ' + single_file + '\033[K')
 			if 'in' in single_file and 'out' not in single_file:
 				point_set=np.genfromtxt(single_file,delimiter=',')
 				if np.isnan(point_set).any():
