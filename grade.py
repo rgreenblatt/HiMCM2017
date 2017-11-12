@@ -8,9 +8,6 @@ def grader(paths):
             h=terrain.height_from_coordinates(path[i])
             hp1=terrain.height_from_coordinates(path[i+1])
             
-            hm1=1
-            h=1
-            hp1=1         
             d1=dist(path[i-1],path[i])
             d2=dist(path[i+1],path[i])
             
