@@ -5,6 +5,7 @@ from path import paths as path_lib
 from terrain import terrain
 from region import region
 import difficulty as diff
+from tMap import Resort_Map
 
 regionBottom = -111.8285
 regionTop = -111.806
@@ -47,7 +48,7 @@ for i in range(len(regions1)):
 		area[i][k] = reg.intersection(regions1[i],regions2[k]).area
 areas = area.flatten()
 
-weights = {"regionalVariation" : 10, "difficulty" : 10, "congenstion" : 10}
+weights = {"regionalVariation" : .33333, "difficulty" : .33333, "congenstion" : .33333}
 totalPeople = 4000
 liftSpeeds = 100
 descentSpeed = 100
@@ -55,7 +56,9 @@ descentSpeed = 100
 def feet_to_deg(feet):
 	return feet / 11030.
 
-def fitness(paths, lifts, ground):
+def fitness(individual, ground):
+	paths = individual.trail_set
+	lifts = individual.chair_set
 	pathLengths = []
 	path_points = []
 	for path in paths:
@@ -110,7 +113,7 @@ def fitness(paths, lifts, ground):
 				
 		penalty+=np.sum(ground.in_region(np.transpose(points)))*-.1
 
-	#print(paths)
+	print(paths)
 	
 	pathDiff = diff.difficulty(paths,ground)
 	green = np.where(pathDiff == 0, 1, 0)
