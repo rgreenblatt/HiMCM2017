@@ -19,7 +19,7 @@ class region:
                                         only_files.append(os.path.join(root,name))
                 return only_files
 
-	def load_single_region(self,name_in, names_out):
+	def load_single_region(self,name_in, names_out = None):
 		self.points_in = np.genfromtxt(name_in,delimiter=',')
 		self.points_out = []
 		for name in names_out:

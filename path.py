@@ -23,7 +23,9 @@ class paths:
 		ax.plot(locations[0],locations[1], 'r-')
 		plt.show()
 
-	def calc_locations(self,num_points):
+	def calc_locations(self,num_points=None):
+		if num_points == None:
+			num_points = self.resolution
 		u = np.linspace(0,1,num=num_points)
 		new_points = splev(u,self.spline)
 		return new_points
