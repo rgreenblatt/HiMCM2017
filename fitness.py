@@ -21,7 +21,7 @@ regionX = np.array([region1, region2,region3,region4,region5,region6,region7])
 regionY = np.array([regionBottom, regionTop])
 
 fileNameArray1 = ["Regions/region1.csv","Regions/region2.csv","Regions/region3.csv","Regions/region4.csv","Regions/region5.csv","Regions/region6.csv","Regions/region6.csv"]
-fileNameArray2 = ["dividers1", "dividers2", "dividers3"]
+fileNameArray2 = ["Regions/dividers1.csv", "Regions/dividers2.csv", "Regions/dividers3.csv"]
 
 regions1 = []
 for fileName in fileNameArray1:
@@ -37,10 +37,15 @@ for fileName in fileNameArray2:
 
 areas = np.zeros((len(regions1), len(regions2)))
 
+reg = region()
+reg.load_region('data_terrain/regions')
+
+area = np.zeros((len(regions1),len(regions2)))
+
 for i in range(len(regions1)):
 	for k in range(len(regions2)):
-		area[i][k] = ground.regions.intersection(regions1[i]).intersection(regions2[k]).area
-areas = np.flatten(area)
+		area[i][k] = reg.intersection(regions1[i],regions2[k]).area
+areas = area.flatten
 
 
 def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCapacities, ground):
@@ -49,7 +54,7 @@ def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCa
 	
 	penalty = 0
 	
-	if(totalPathLength > 656168);
+	if(totalPathLength > 656168):
 		penalty +=(totalpathlength - 656168)*-.01
 	if( totalPathLength < 524934):
 		penalty += (524934 - totalpathlength)*-.01
@@ -67,7 +72,7 @@ def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCa
 		x_regions = []
 		x_regions.append(points[0]<regionX[0])
 		for i in range(regionX.shape[0]-1):
-			x_regions.append(regionX[i] <= points[0] < regionX[i+1))
+			x_regions.append(regionX[i] <= points[0] < regionX[i+1])
 		
 		x_regions.append(points[0] >= regionX[-1])
 		
@@ -116,7 +121,7 @@ def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCa
 	
 
 		
-	trailLengthsPerLift = #TODO: some function probably from terrain here
+	trailLengthsPerLift = 10 #TODO: some function probably from terrain here
 
 		
 	congestScore = congest.congFitness(totalPeople, trailLengthsPerLift,  liftCapacity, liftTimeToTop, skiTimeDown) 
