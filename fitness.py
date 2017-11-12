@@ -39,20 +39,29 @@ areas = np.zeros((len(regions1), len(regions2)))
 for i in range(len(regions1)):
 	for k in range(len(regions2)):
 		area[i][k] = ground.regions.intersection(regions1[i]).intersection(regions2[k]).area
-area = np.flatten(area)
+areas = np.flatten(area)
 
 
-def fitness(weights,partitionAreas, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCapacities, areas):
-	totalPathLength = #some function here on paths
-	if(totalPathLength > 656168 or totalPathLength < 524934 or lift.shape[0] > 19 or lift.shape[0] < 3):#feet
-		return -3000
+def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCapacities):
+	totalPathLength = np.sum(np.apply_along_axis(ground.length_of_path, 0, 	paths))
+	
+	penalty = 0
+	
+	if(totalPathLength > 656168);
+		penalty +=(totalpathlength - 656168)*-.01
+	if( totalPathLength < 524934):
+		penalty += (524934 - totalpathlength)*-.01
+	if(lift.shape[0] > 19):
+		penalty += (lift.shape[0] - 19)*-.2
+	if(lift.shape[0] < 3):#feet	
+		penalty += (3-lift.shape[0])*-.4
 	else:
 		
 		ground = terrain()
-		lengthsPerPartition = #some function here on paths (probably in terrain.py as it needs partition data)
+		lengthsPerPartition = #TODO: some function here on paths (probably in terrain.py as it needs partition data)
 		
 		
-		numberOfEachDifficulty = #some function here on paths which judges difficulty
+		numberOfEachDifficulty = #TODO:some function here on paths which judges difficulty
 		varietyScores = var.variety(numberOfEachDifficulty, lengthsPerPartition, partitionAreas)
 
 		liftDistance = []
@@ -67,7 +76,7 @@ def fitness(weights,partitionAreas, paths, lifts, totalPeople, liftSpeeds, desce
 			skiTimeDown.append(abs((elevations[1] - elevations[0])/descentSpeed))
 		liftTimeToTop = np.array(liftDistance)/liftSpeeds
 		
-		penalty = 0
+
 		for path in paths:
 			points = path.calc_locations(100)
 			x_regions = []
@@ -80,11 +89,11 @@ def fitness(weights,partitionAreas, paths, lifts, totalPeople, liftSpeeds, desce
 
 			penalty+=np.sum(ground.in_region(path))*-.1
 			
-		trailLengthsPerLift = #some function probably from terrain here
+		trailLengthsPerLift = #TODO: some function probably from terrain here
 
 			
 		congestScore = congest.congFitness(totalPeople, trailLengthsPerLift,  liftCapacity, liftTimeToTop, skiTimeDown) 
-		return weights["regionalVariation"]*varietyScores[0]+weights["difficulty"]*varietyScores[1]+weights["congestion"]*congestScore
+		return weights["regionalVariation"]*varietyScores[0]+weights["difficulty"]*varietyScores[1]+weights["congestion"]*congestScore+penalties
 		
 		
 	
