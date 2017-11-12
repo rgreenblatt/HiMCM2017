@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import random
 import deap
 
@@ -21,10 +21,23 @@ class Resort_Map():
     def make_trail(self, chair):
         # Karna and Ryan will write this
         # Given the endpoints of a chair, find a path for a 
+        curr = chair[1]
+        bottom = chair[0]
+        path = []
+        while mag(curr - bottom) < 200:
+            dir = (bottom - curr)/mag(bottom-curr)
+            theta = np.pi*(random.random()*15-30)/180
+            dir = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), -np.cos(theta)]]).dot(dir)
+            curr += dir * 50
+
+    def make_path():
         pass
 
     def make_chair(self, point1, point2):
-        pass
+        
+
+def mag(a1):
+    return np.sqrt(a1.dot(a1))
 
 def fitness(trail_map):
     #TODO: trail_map gives chair endpoints as list, followed by list of trail points. 
@@ -72,11 +85,17 @@ def driver(NGEN=10, CXPB=.5, MUTPB=.1):
     toolbox.register("evaluate", fitness)
 
     pop = toolbox.population()
+
+    invalid = [ind for ind in pop if ind.fitness=None]
+    fitnesses = list(toolbox.map(toolbox.evaluate, invalid))
+    for ind, fit in zip(invalid, fitnesses):
+        ind.fitness = fit
+
     for g in range(NGEN):
         offspring = toolbox.select(pop, len(pop))
 
         # Clone selected
-        offspring = map(toolbox.clone, offspring)
+        offspring = list(map(toolbox.clone, offspring))
         
         for child1, child2 in zip(offspring[::2], offspring[1::2]):
             if random.random() < CXPB:
@@ -90,7 +109,7 @@ def driver(NGEN=10, CXPB=.5, MUTPB=.1):
                 mutant.fitness = None
 
         invalid = [ind for ind in offspring if ind.fitness=None]
-        fitnesses = toolbox.map(toolbox.evaluate, invalid)
+        fitnesses = list(toolbox.map(toolbox.evaluate, invalid))
         for ind, fit in zip(invalid, fitnesses):
             ind.fitness = fit
 
@@ -104,3 +123,7 @@ def driver(NGEN=10, CXPB=.5, MUTPB=.1):
             fit = ind.fitness
             fittest = ind
     return (ind, fit)
+
+if __name__ == 'main':
+    test = rand_map()
+    
