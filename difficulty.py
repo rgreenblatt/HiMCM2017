@@ -28,7 +28,7 @@ def difficulty(paths,ground):
             d1=dist(path[i-1],path[i])
             d2=dist(path[i+1],path[i])
             
-            print(d1)
+            #print(d1)
 
             s1=abs(h-hm1)/d1
             s2=abs(hp1-h)/d2
@@ -36,7 +36,7 @@ def difficulty(paths,ground):
             grades.append((s1+s2)/2)
         maximum = np.max(grades)        
 
-        print(maximum)
+       # print(maximum)
 
         if maximum<0.25:
             out.append(0)

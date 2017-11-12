@@ -319,6 +319,7 @@ class gen_algoth:
 
 
 if __name__ == '__main__':
-    print(gen_algoth.driver())
-
+        
+        hi =(gen_algoth.driver())
+        #print(hi)
     

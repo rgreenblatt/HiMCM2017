@@ -211,7 +211,7 @@ class terrain:
 		coordinate = self.sort_by_data_set(coordinate_in)
 		for area,interpolater in zip(coordinate,self.interp):
 			inter_value = interpolater(area[0][0],area[0][1],grid=False)
-			print(area)
+			#print(area)
 			if len(coordinate_in.shape) == 2:
 				interpolated[area[1][0]] = inter_value
 			if len(coordinate_in.shape) == 3:
