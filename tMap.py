@@ -11,7 +11,7 @@ class Resort_Map():
 
         self.trail_set = trail_set # trail_set is a list of arrays specifying the trails
         self.fitness = None
-#TODO: convert out of feet in below function
+#TODO: convert to feet in below function
     def make_trail(self, chair):
         # Karna and Ryan will write this
         # Given the endpoints of a chair, find a path for a 
@@ -50,13 +50,11 @@ class Resort_Map():
 
     def trails_owned(self, chair):
         out = []
-        i = 0
-        for trail in self.trail_set:
+        for trail,i in zip(self.trail_set,range(len(self.trail_set))):
             if(np.all(trail[0] == chair[1]) and np.all(trail[-1] == chair[0])):
-                out.append(trail)
+                out.append(i)
             elif (np.all(np.array(trail[0] == chair[0]))):
                 out.append(i)
-            i+=1
         return out
 
 

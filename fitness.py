@@ -1,11 +1,14 @@
 import numpy as np
 import variety as var
-import congest
-from path import paths as path_lib
+
 from terrain import terrain
 from region import region
 import difficulty as diff
 from tMap import Resort_Map
+
+from path import paths as path_lib
+
+import congest
 
 regionBottom = -111.8285
 regionTop = -111.806
@@ -60,19 +63,18 @@ def feet_to_deg(feet):
 	return feet / 11030.
 
 def fitness(individual, ground):
-	paths = individual.trail_set
+	paths = np.flip(individual.trail_set, axis =2)
 	lifts = individual.chair_set
 	pathLengths = []
 	path_points = []
 	for path in paths:
 		temp_path = path_lib()
 		temp_path.set_points(np.transpose(path))
-		single_point = temp_path.calc_locations()
+		single_point = temp_path.calc_locations(20)
 		path_points.append(single_point)
-		temp_array = np.reshape(np.transpose(single_point),(2,-1,1))
-		pathLengths.append(ground.length_of_path(temp_array))
+		pathLengths.append(ground.length_of_path(np.array(single_point)))
 	totalPathLength = np.sum(pathLengths)
-	
+	#print(pathLengths)	
 	penalty = 0
 	
 	if(totalPathLength > feet_to_deg(656168)):
@@ -87,7 +89,8 @@ def fitness(individual, ground):
 	#finds lengths of trails in each partition
 	lengthsByRegion = np.zeros((regionX.shape[0],regionY.shape[0]+1))
 	for path,points in zip(paths,path_points):
-			
+		#print(points)	
+
 		tmp_pnt = np.array(points)
 		x_regions = []
 		for i in range(regionX.shape[0]-1):
@@ -99,7 +102,8 @@ def fitness(individual, ground):
 			y_regions.append(np.logical_and(regionY[i] <= points[1], points[1] < regionY[i+1]))
 	
 		y_regions.append(points[1] >= regionY[-1])
-		
+		#print(np.array(x_regions))
+		#print(np.array(y_regions))	
 		for xReg,i in zip(x_regions,range(len(x_regions))):
 			for yReg, k in zip(y_regions,range(len(y_regions))):
 				#where both xReg and yReg, get points and find total length
@@ -108,11 +112,12 @@ def fitness(individual, ground):
 				contiguous = np.split(pointIndex,np.where(np.diff(pointIndex)!=1)[0]+1)
 
 				for indices in contiguous:
-					temp_path = np.reshape(tmp_pnt[:,indices],(2,-1,1))
+					temp_path = np.array(tmp_pnt[:,indices])
 					lengthsByRegion[i,k]+=ground.length_of_path(temp_path)
-				
+			
 		penalty+=np.sum(ground.in_region(np.transpose(points)))*-.1
 	lengthsByRegion = lengthsByRegion.flatten()
+	#print(lengthsByRegion)
 #	print(paths)
 	
 	pathDiff = diff.difficulty(paths,ground)

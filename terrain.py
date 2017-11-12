@@ -96,7 +96,7 @@ class terrain:
 		print("Loading Elevation Data")
 		file_names = terrain.getFileNames(file_location,('.img'))
 		
-		deg_to_feet=110030.
+		deg_to_feet=364287.
 		
 		self.overall_box = self.regions.box_region()
 		
@@ -219,12 +219,17 @@ class terrain:
 		return interpolated
 
 	def length_of_path(self,path):
+		#print(path)
 		heights = self.height_at_coordinates(path)
 
-		path = 11030.*np.concatenate((path,[heights]),axis=0)
-		
-		distances = np.sqrt(np.sum(np.square(path[:-1]-path[1:]),axis=0))
-
+		path = np.concatenate((364287.*path,[heights]),axis=0)
+		#print("path")
+		#print(path)
+		#print("heights")
+		#print(heights)
+		distances = np.sqrt(np.sum(np.square(np.diff(path,axis=1)),axis=0))
+		#print("distances")
+		#print(distances)
 		return np.sum(distances)
 
 
