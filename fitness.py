@@ -146,9 +146,14 @@ def fitness(individual, ground):
 	liftTimeToTop = np.array(liftDistance)/liftSpeeds
 	
 
-		
-	trailLengthsPerLift = 10 #TODO: some function probably from terrain here
-
+	trailLengthsPerLift = np.zeros((len(lifts)) 
+	i=0
+	for lift in lifts:
+		lengthByLift = 0
+		for index in individual.trails_owned(lift):
+			lengthByLift+=ground.length_of_path(paths[index])		 
+		trailLengthsPerLift[i] = lengthByLift
+		i+=1
 		
 	congestScore = congest.congFitness(totalPeople, trailLengthsPerLift,  liftCapacity, liftTimeToTop, skiTimeDown) 
 	return weights["regionalVariation"]*varietyScores[0]+weights["difficulty"]*varietyScores[1]+weights["congestion"]*congestScore+penalty

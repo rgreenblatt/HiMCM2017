@@ -50,12 +50,14 @@ class Resort_Map():
 
     def trails_owned(self, chair):
         out = []
+        i = 0
         for trail in self.trail_set:
             if trail[0] == chair[1] and trail[-1] == chair[0]:
                 out.append(trail)
             elif trail[0] == chair[0]:
-                out.append(trail)
-        return out
+                out.append(i)
+            i+=1
+	return out
 
 
     def make_chair(self, bottom, top):
