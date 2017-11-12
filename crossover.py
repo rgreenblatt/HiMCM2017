@@ -6,8 +6,6 @@ from genetic import Resort_Map
 
 
 def cross(parent1,parent2):
-    ground=terrain()
-    ground.load_elevation("data_terrain/elevation")
         
     chrlens=(len(parent1.chair_set),len(parent2.chair_set))
     chrlen=chrlens[random.randint(0,1)]
