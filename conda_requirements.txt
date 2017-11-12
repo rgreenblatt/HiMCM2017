@@ -41,7 +41,7 @@ pcre=8.39=0
 pip=9.0.1=py35_1
 proj4=4.9.2=0
 pyparsing=2.2.0=py35_0
-pyqt=5.6.0=py35_4
+#pyqt=5.6.0=py35_4
 python=3.5.4=0
 python-dateutil=2.6.1=py35_0
 pytz=2017.3=py_2

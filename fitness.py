@@ -43,7 +43,7 @@ for i in range(len(regions1)):
 areas = np.flatten(area)
 
 
-def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCapacities):
+def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCapacities, ground):
 	pathLengths = np.apply_along_axis(ground.length_of_path, 0, paths)
 	totalPathLength = np.sum(pathLengths)
 	
@@ -57,54 +57,70 @@ def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCa
 		penalty += (lift.shape[0] - 19)*-.2
 	if(lift.shape[0] < 3):#feet	
 		penalty += (3-lift.shape[0])*-.4
-	else:
-		
-		ground = terrain()
-		lengthsPerPartition = #TODO: some function here on paths (probably in terrain.py as it needs partition data)
-		
-		
-		pathDiff = diff.difficulty(paths)
-		green = np.where(pathDiff == 0, 1, 0)
-		blue = np.where(pathDiff == 1, 1, 0)
-		black = np.where(pathDiff == 2, 1, 0)
-
-		greenLength = np.sum(green*pathLengths)	
-		blueLength = np.sum(blue*pathLengths)	
-		blackLength = np.sum(black*pathLengths)
-		lengthByDiff = np.array([greenLength, blueLength, blackLength])
-		
-		varietyScores = var.variety(lengthByDiff, lengthsPerPartition, areas)
-
-		liftDistance = []
-		skiTimeDown = []
-		for lift in lifts:
-			Xcoords = np.linspace(lift[0][0], lift[1][0], 300)	
-			Ycoords = np.linspace(lift[0][1], lift[1][1], 300)
-			#liftPath = np.swapaxes(np.array([Xcoords, Ycoords]), 0, 1)
-
-			liftDistance.append(ground.length_of_path(np.array([Xcoords, Ycoords])))
-			elevations = ground.height_at_coordinates(np.array([[lift[0][0], lift[1][0]], [lift[0][1], lift[1][1]]]))
-			skiTimeDown.append(abs((elevations[1] - elevations[0])/descentSpeed))
-		liftTimeToTop = np.array(liftDistance)/liftSpeeds
-		
-
-		for path in paths:
-			points = path.calc_locations(100)
-			x_regions = []
-			for i in range(regionX.shape[0]-1):
-				x_regions.append(np.where(regionX[i] <= points[0] < regionX[i+1]))
-			y_regions = []
-			for i in range(regionY.shape[0]-1):
-				y_regions.append(np.where(regionY[i] <=	points[1] < regionY[i+1]))
-					
-
-			penalty+=np.sum(ground.in_region(path))*-.1
-			
-		trailLengthsPerLift = #TODO: some function probably from terrain here
-
-			
-		congestScore = congest.congFitness(totalPeople, trailLengthsPerLift,  liftCapacity, liftTimeToTop, skiTimeDown) 
-		return weights["regionalVariation"]*varietyScores[0]+weights["difficulty"]*varietyScores[1]+weights["congestion"]*congestScore+penalties
-		
-		
 	
+	#finds lengths of trails in each partition
+	lengthsByRegion = np.zeros((regionX.shape[0]+1,regionY.shape[0]+1))
+	for path in paths:
+			
+		points = path.calc_locations(100)
+		
+		x_regions = []
+		x_regions.append(points[0]<regionX[0])
+		for i in range(regionX.shape[0]-1):
+			x_regions.append(regionX[i] <= points[0] < regionX[i+1))
+		
+		x_regions.append(points[0] >= regionX[-1])
+		
+		y_regions = []
+		y_regions.append(points[1]<regionY[0])
+		for i in range(regionY.shape[0]-1):
+			y_regions.append(regionY[i] <=	points[1] < regionY[i+1])
+	
+		y_regions.append(points[1] >= regionY[-1])
+		
+		for xReg,i in zip(x_regions,range(len(x_regions))):
+			for yReg, k in zip(y_regions,range(len(y_regions))):
+				#where both xReg and yReg, get points and find total length
+				pointIndex = np.where(np.logical_and(xReg, yReg))
+
+				contiguous = np.split(pointIndex,np.where(np.diff(pointIndex)!=1)[0]+1)
+
+				for indices in contiguous:
+					lengthsByRegion[i,k]+=ground.length_of_path(points[indices])
+				
+		penalty+=np.sum(ground.in_region(points))*-.1
+	
+	pathDiff = diff.difficulty(paths)
+	green = np.where(pathDiff == 0, 1, 0)
+	blue = np.where(pathDiff == 1, 1, 0)
+	black = np.where(pathDiff == 2, 1, 0)
+
+	greenLength = np.sum(green*pathLengths)	
+	blueLength = np.sum(blue*pathLengths)	
+	blackLength = np.sum(black*pathLengths)
+	lengthByDiff = np.array([greenLength, blueLength, blackLength])
+	
+	varietyScores = var.variety(lengthByDiff, lengthsByRegion, areas)
+
+	liftDistance = []
+	skiTimeDown = []
+	for lift in lifts:
+		Xcoords = np.linspace(lift[0][0], lift[1][0], 300)	
+		Ycoords = np.linspace(lift[0][1], lift[1][1], 300)
+		#liftPath = np.swapaxes(np.array([Xcoords, Ycoords]), 0, 1)
+
+		liftDistance.append(ground.length_of_path(np.array([Xcoords, Ycoords])))
+		elevations = ground.height_at_coordinates(np.array([[lift[0][0], lift[1][0]], [lift[0][1], lift[1][1]]]))
+		skiTimeDown.append(abs((elevations[1] - elevations[0])/descentSpeed))
+	liftTimeToTop = np.array(liftDistance)/liftSpeeds
+	
+
+		
+	trailLengthsPerLift = #TODO: some function probably from terrain here
+
+		
+	congestScore = congest.congFitness(totalPeople, trailLengthsPerLift,  liftCapacity, liftTimeToTop, skiTimeDown) 
+	return weights["regionalVariation"]*varietyScores[0]+weights["difficulty"]*varietyScores[1]+weights["congestion"]*congestScore+penalties
+	
+	
+
