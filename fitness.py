@@ -1,7 +1,7 @@
 import numpy as np
 import variety as var
 import congest
-import path
+from path import paths as path_lib
 from terrain import terrain
 from region import region
 import difficulty as diff
@@ -47,39 +47,53 @@ for i in range(len(regions1)):
 		area[i][k] = reg.intersection(regions1[i],regions2[k]).area
 areas = area.flatten()
 
+weights = {"regionalVariation" : 10, "difficulty" : 10, "congenstion" : 10}
+totalPeople = 4000
+liftSpeeds = 100
+descentSpeed = 100
 
-def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCapacities, ground):
-	pathLengths = np.apply_along_axis(ground.length_of_path, 0, paths)
+def feet_to_deg(feet):
+	return feet / 11030.
+
+def fitness(paths, lifts, ground):
+	pathLengths = []
+	path_points = []
+	for path in paths:
+		temp_path = path_lib()
+		temp_path.set_points(np.transpose(path))
+		single_point = temp_path.calc_locations()
+		path_points.append(single_point)
+		temp_array = np.reshape(np.transpose(single_point),(2,-1,1))
+		pathLengths.append(ground.length_of_path(temp_array))
 	totalPathLength = np.sum(pathLengths)
 	
 	penalty = 0
 	
-	if(totalPathLength > 656168):
-		penalty +=(totalpathlength - 656168)*-.01
-	if( totalPathLength < 524934):
-		penalty += (524934 - totalpathlength)*-.01
-	if(lift.shape[0] > 19):
-		penalty += (lift.shape[0] - 19)*-.2
-	if(lift.shape[0] < 3):#feet	
-		penalty += (3-lift.shape[0])*-.4
+	if(totalPathLength > feet_to_deg(656168)):
+		penalty +=(totalPathLength - feet_to_deg(656168))*-.01
+	if(totalPathLength < feet_to_deg(524934)):
+		penalty += (feet_to_deg(524934) - totalPathLength)*-.01
+	if(len(lifts) > 19):
+		penalty += (len(lifts) - 19)*-.2
+	if(len(lifts) < 3):#feet	
+		penalty += (3-len(lifts))*-.4
 	
 	#finds lengths of trails in each partition
 	lengthsByRegion = np.zeros((regionX.shape[0]+1,regionY.shape[0]+1))
-	for path in paths:
+	for path,points in zip(paths,path_points):
 			
-		points = path.calc_locations(100)
-		
+		tmp_pnt = np.array(points)
 		x_regions = []
 		x_regions.append(points[0]<regionX[0])
 		for i in range(regionX.shape[0]-1):
-			x_regions.append(regionX[i] <= points[0] < regionX[i+1])
-		
+			x_regions.append(np.logical_and(regionX[i] <= points[0], points[0] < regionX[i+1]))
+		#print((regionX[:-1] <= np.repeat([points],6,axis=0) < regionX[1:]))
 		x_regions.append(points[0] >= regionX[-1])
 		
 		y_regions = []
 		y_regions.append(points[1]<regionY[0])
 		for i in range(regionY.shape[0]-1):
-			y_regions.append(regionY[i] <=	points[1] < regionY[i+1])
+			y_regions.append(np.logical_and(regionY[i] <= points[1], points[1] < regionY[i+1]))
 	
 		y_regions.append(points[1] >= regionY[-1])
 		
@@ -91,19 +105,28 @@ def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCa
 				contiguous = np.split(pointIndex,np.where(np.diff(pointIndex)!=1)[0]+1)
 
 				for indices in contiguous:
-					lengthsByRegion[i,k]+=ground.length_of_path(points[indices])
+					temp_path = np.reshape(tmp_pnt[:,indices],(2,-1,1))
+					lengthsByRegion[i,k]+=ground.length_of_path(temp_path)
 				
-		penalty+=np.sum(ground.in_region(points))*-.1
+		penalty+=np.sum(ground.in_region(np.transpose(points)))*-.1
+
+	#print(paths)
 	
-	pathDiff = diff.difficulty(paths)
+	pathDiff = diff.difficulty(paths,ground)
 	green = np.where(pathDiff == 0, 1, 0)
 	blue = np.where(pathDiff == 1, 1, 0)
 	black = np.where(pathDiff == 2, 1, 0)
+
+	#print(pathDiff)
 
 	greenLength = np.sum(green*pathLengths)	
 	blueLength = np.sum(blue*pathLengths)	
 	blackLength = np.sum(black*pathLengths)
 	lengthByDiff = np.array([greenLength, blueLength, blackLength])
+	
+	#print(lengthByDiff)
+	#print(lengthsByRegion)
+	#print(areas)
 	
 	varietyScores = var.variety(lengthByDiff, lengthsByRegion, areas)
 
@@ -125,7 +148,7 @@ def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCa
 
 		
 	congestScore = congest.congFitness(totalPeople, trailLengthsPerLift,  liftCapacity, liftTimeToTop, skiTimeDown) 
-	return weights["regionalVariation"]*varietyScores[0]+weights["difficulty"]*varietyScores[1]+weights["congestion"]*congestScore+penalties
+	return weights["regionalVariation"]*varietyScores[0]+weights["difficulty"]*varietyScores[1]+weights["congestion"]*congestScore+penalty
 	
 	
 

@@ -96,6 +96,9 @@ class gen_algoth:
   
     GROUND = terrain()
 
+    def call_fitness(individual):
+        return fitness(individual.trail_set,individual.chair_set,gen_algoth.GROUND)
+
     def mutate(child):
         #TODO:Take the top point of some trails. Draw new paths to the bottom. 
         if random.random() < P1:
@@ -325,7 +328,7 @@ class gen_algoth:
         toolbox.register("mate", gen_algoth.cross)
         toolbox.register("mutate", gen_algoth.mutate)
         toolbox.register("select", tools.selTournament, tournsize=5)
-        toolbox.register("evaluate", fitness)
+        toolbox.register("evaluate", gen_algoth.call_fitness)
 
         pop = toolbox.population()
 

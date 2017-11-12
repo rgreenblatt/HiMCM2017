@@ -246,9 +246,9 @@ class terrain:
 	def length_of_path(self,path):
 		heights = self.height_at_coordinates(path)
 
-		path = np.concatenate((path,heights),axis=1)
+		path = np.concatenate((path,[heights]),axis=0)
 		
-		distances = np.sqrt(np.square(np.square(path[:-1]-path[1:]),axis=0))
+		distances = np.sqrt(np.sum(np.square(path[:-1]-path[1:]),axis=0))
 
 		return np.sum(distances)
 

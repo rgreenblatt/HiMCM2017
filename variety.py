@@ -14,6 +14,7 @@ def variety(testruns,testdist, areas):
     nregions=testdist.shape[0]
     trueruns=np.array([0.2*nruns,0.4*nruns,0.4*nruns])
     truedist=np.sum(testdist)*areas/np.sum(areas)
+    print([trueruns,testruns])
     anglerun=FindAngle(trueruns,testruns)
     angledist=FindAngle(truedist,testdist)
     error=lambda true,test:abs(test-true)/true

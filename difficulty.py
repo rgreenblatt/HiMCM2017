@@ -1,19 +1,21 @@
 import numpy as np
-#from terrain import terrain
+from terrain import terrain
 
 def dist(p1,p2):
     return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
 
-def difficulty(paths):
+def difficulty(paths,ground):
     out=[]
    
     for path in paths:
         maxer=0
     
+        heights = ground.height_at_coordinates(np.reshape(path,(2,-1,1)))
+
         for i in range(1,len(path)-1):
-            hm1=terrain.height_from_coordinates(path[i-1])
-            h=terrain.height_from_coordinates(path[i])
-            hp1=terrain.height_from_coordinates(path[i+1])
+            hm1=heights[i-1]
+            h=heights[i]
+            hp1=heights[i+1]
             
             hm1=1
             h=1
