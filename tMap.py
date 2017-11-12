@@ -3,13 +3,10 @@ import random
 import path as path_lib
 import sys
 
-
-
-
 BASE_LIFTS = 3
 # Organisms will probably be treated as graphs with points representing the entry and exit points
 class Resort_Map():
-    def __init__(self, chair_set, trail_set):
+    def __init__(self, chair_set=None, trail_set=None):
         self.chair_set = chair_set # chair set is a list of arrays specifying chair end points
 
         self.trail_set = trail_set # trail_set is a list of arrays specifying the trails
