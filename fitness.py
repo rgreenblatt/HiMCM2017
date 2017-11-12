@@ -45,7 +45,7 @@ area = np.zeros((len(regions1),len(regions2)))
 for i in range(len(regions1)):
 	for k in range(len(regions2)):
 		area[i][k] = reg.intersection(regions1[i],regions2[k]).area
-areas = area.flatten
+areas = area.flatten()
 
 
 def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCapacities, ground):
