@@ -2,20 +2,79 @@ import numpy as np
 import variety as var
 import congest
 import path
-import terrain
+from terrain import terrain
+from region import region
+import difficulty as diff
 
-def fitness(weights,partitionAreas, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCapacities):
-	totalPathLength = #some function here on paths
-	if(totalPathLength > 656168 or totalPathLength < 524934 or lift.shape[0] > 19 or lift.shape[0] < 3):#feet
-		return -3000
+regionBottom = -111.8285
+regionTop = -111.806
+
+region1 = 41.0175
+region2 = 41.031
+region3 = 41.06
+region4 = 41.074
+region5 = 41.08927
+region6 = 41.112
+region7 = 41.14
+
+regionX = np.array([region1, region2,region3,region4,region5,region6,region7])
+regionY = np.array([regionBottom, regionTop])
+
+fileNameArray1 = ["Regions/region1.csv","Regions/region2.csv","Regions/region3.csv","Regions/region4.csv","Regions/region5.csv","Regions/region6.csv","Regions/region6.csv"]
+fileNameArray2 = ["dividers1", "dividers2", "dividers3"]
+
+regions1 = []
+for fileName in fileNameArray1:
+	regionT = region()
+	regionT.load_single_region(fileName)
+	regions1.append(regionT) 
+
+regions2 = []
+for fileName in fileNameArray2:
+	regionT = region()
+	regionT.load_single_region(fileName)
+	regions2.append(regionT) 
+
+areas = np.zeros((len(regions1), len(regions2)))
+
+for i in range(len(regions1)):
+	for k in range(len(regions2)):
+		area[i][k] = ground.regions.intersection(regions1[i]).intersection(regions2[k]).area
+areas = np.flatten(area)
+
+
+def fitness(weights, paths, lifts, totalPeople, liftSpeeds, descentSpeed, liftCapacities):
+	pathLengths = np.apply_along_axis(ground.length_of_path, 0, paths)
+	totalPathLength = np.sum(pathLengths)
+	
+	penalty = 0
+	
+	if(totalPathLength > 656168);
+		penalty +=(totalpathlength - 656168)*-.01
+	if( totalPathLength < 524934):
+		penalty += (524934 - totalpathlength)*-.01
+	if(lift.shape[0] > 19):
+		penalty += (lift.shape[0] - 19)*-.2
+	if(lift.shape[0] < 3):#feet	
+		penalty += (3-lift.shape[0])*-.4
 	else:
 		
-		ground = terrain.terrain()
-		lengthsPerPartition = #some function here on paths (probably in terrain.py as it needs partition data)
+		ground = terrain()
+		lengthsPerPartition = #TODO: some function here on paths (probably in terrain.py as it needs partition data)
 		
-		numberOfEachDifficulty = #some function here on paths which judges difficulty
-		varietyScores = var.variety(numberOfEachDifficulty, lengthsPerPartition, partitionAreas)
 		
+		pathDiff = diff.difficulty(paths)
+		green = np.where(pathDiff == 0, 1, 0)
+		blue = np.where(pathDiff == 1, 1, 0)
+		black = np.where(pathDiff == 2, 1, 0)
+
+		greenLength = np.sum(green*pathLengths)	
+		blueLength = np.sum(blue*pathLengths)	
+		blackLength = np.sum(black*pathLengths)
+		lengthByDiff = np.array([greenLength, blueLength, blackLength])
+		
+		varietyScores = var.variety(lengthByDiff, lengthsPerPartition, areas)
+
 		liftDistance = []
 		skiTimeDown = []
 		for lift in lifts:
@@ -28,12 +87,24 @@ def fitness(weights,partitionAreas, paths, lifts, totalPeople, liftSpeeds, desce
 			skiTimeDown.append(abs((elevations[1] - elevations[0])/descentSpeed))
 		liftTimeToTop = np.array(liftDistance)/liftSpeeds
 		
-		
-		trailLengthsPerLift = #some function probably from terrain here
+
+		for path in paths:
+			points = path.calc_locations(100)
+			x_regions = []
+			for i in range(regionX.shape[0]-1):
+				x_regions.append(np.where(regionX[i] <= points[0] < regionX[i+1]))
+			y_regions = []
+			for i in range(regionY.shape[0]-1):
+				y_regions.append(np.where(regionY[i] <=	points[1] < regionY[i+1]))
+					
+
+			penalty+=np.sum(ground.in_region(path))*-.1
+			
+		trailLengthsPerLift = #TODO: some function probably from terrain here
 
 			
 		congestScore = congest.congFitness(totalPeople, trailLengthsPerLift,  liftCapacity, liftTimeToTop, skiTimeDown) 
-		return weights["regionalVariation"]*varietyScores[0]+weights["difficulty"]*varietyScores[1]+weights["congestion"]*congestScore
+		return weights["regionalVariation"]*varietyScores[0]+weights["difficulty"]*varietyScores[1]+weights["congestion"]*congestScore+penalties
 		
 		
 	
