@@ -4,10 +4,11 @@ from scipy.interpolate import splprep, splev
 import matplotlib.pyplot as plt
 
 class paths:
-	def __init__(self):
+	def __init__(self,points = None):
 		self.spline = None
 		self.resolution = 100
-		pass
+		if points != None:
+            self.set_points(points)
 
 	def set_points(self,points):
 		self.point_array = points
