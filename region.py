@@ -21,7 +21,10 @@ class region:
                 return only_files
 
 	def load_single_region(self,name_in, names_out = None):
-		self.points_in = np.genfromtxt(name_in,delimiter=',')
+		try:
+			self.points_in = np.genfromtxt(name_in,delimiter=',')
+		except Exception as e:
+			print("Failed to load file " + name_in + ". Error " + str(e)) #This was added because Ryan is bad at filenames
 		self.points_out = []
 		if names_out != None:
 			for name in names_out:
@@ -34,7 +37,7 @@ class region:
 		while len(valid_points) < number_of_points:
 			points=np.array([np.random.uniform(bounds[0][0],bounds[1][0],number_of_points-len(valid_points)),np.random.uniform(bounds[0][1],bounds[1][1],number_of_points-len(valid_points))])
 			points = np.transpose(points)
-			valid_points.extend(points[np.where(self.in_region(points))]*11030)
+			valid_points.extend(points[np.where(self.in_region(points))])
 		return valid_points
 		
 
@@ -70,6 +73,11 @@ class region:
 			contained.append(self.polygon.contains(loc))
 		contained = numpy.array(contained)
 		return contained
+
+	def intersection(self,otherA,otherB):
+		poly = otherA.polygon.intersection(otherB.polygon)
+		return poly.intersection(self.polygon)
+		
 def main():
 	reg = region()
 	#print(reg.in_region(numpy.array([[1,1.5],[0.5,0.5],[1.3,1.4],[2,1.5]])))
