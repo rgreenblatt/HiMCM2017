@@ -18,6 +18,8 @@ P3 = .4
 P4 = .4
 BASE_LIFTS = 3
 GROUND = terrain()
+GROUND.load_elevation("data_terrain/elevation")
+BASEH = # The height of the base camp
 
 # Organisms will probably be treated as graphs with points representing the entry and exit points
 class Resort_Map():
@@ -207,6 +209,37 @@ def cross(parent1, parent2):
     #TODO: Take the bottom points of chairlifts. 
     # This function must modify parent1 and parent2
     pass
+
+def cross_helper(parent1,parent2):
+    chrlens=(len(parent1.chair_set),len(parent2.chair_set))
+    chrlen=chrlens[random.randint(0,1)]
+    
+    trlens=(len(parent1.trail_set),len(parent2.trail_set))
+    trllen=trlens[random.randint(0,1)]
+    
+    chrpars=(parent1.chair_set,parent2.chair_set)
+    trlpars=(parent1.trail_set,parent2.trail_set)
+
+    child=Resort_Map([],[])
+    watched=[]
+    
+    for i in range(chrlen):
+        index=random.randint(0,1)
+        currparent=chrpars[index]
+        
+        child.chair_set.append(currparent.chair_set[i])
+        
+        if(BASE_LIFTS <= i): 
+            watched.append(child.chair_set[i][0])
+        watched.append(child.chair_set[i][1])
+
+    for i in range(trllen):
+        for parent in trlpars:
+            currtrail=parent[i]
+            if currtrail[0] in watched:
+                child.trail_set.append(currtrail)
+    return child
+
 
 def rand_map():
     # Return a map object
