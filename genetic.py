@@ -281,7 +281,7 @@ class gen_algoth:
             total_fitness = 0
 
             # Clone selected
-            offspring = list(map(toolbox.clone, offspring))
+            offspring = list(map(toolbox.clone, selected))
             
             for child1, child2 in zip(offspring[::2], offspring[1::2]):
                 if random.random() < CXPB:
