@@ -17,6 +17,7 @@ P2 = .4
 P3 = .4
 P4 = .4
 BASE_LIFTS = 3
+POP_SIZE = 100
 
 # Organisms will probably be treated as graphs with points representing the entry and exit points
 class Resort_Map():
@@ -191,9 +192,11 @@ class gen_algoth:
 
     def cross(parent1,parent2):
         child1 = gen_algoth.cross_helper(parent1,parent2)
-        child2 = gen_algoth.cross_helper(parent1,parent2)
-        parent1 = child1
-        parent2 = child2
+        child2 = gen_algoth.cross_helper(parent2,parent1)
+        parent1.trail_set = child1.trail_set
+        parent1.chair_set = child1.chair_set
+        parent2.trail_set = child2.trail_set
+        parent2.chair_set = child2.chair_set
 
     def cross_helper(parent1,parent2):
         chrlens=(len(parent1.chair_set),len(parent2.chair_set))
@@ -302,7 +305,7 @@ class gen_algoth:
 
         return out
 
-    def driver(NGEN=NGEN, CXPB=CXPB, MUTPB=MUTPB):
+    def driver(NGEN=NGEN, CXPB=CXPB, MUTPB=MUTPB, POP_SIZE=POP_SIZE):
         # Initialize our fitness function
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
@@ -315,7 +318,7 @@ class gen_algoth:
         toolbox.register("individual", gen_algoth.rand_map)
 
         # Register the population
-        toolbox.register("population", tools.initRepeat, list, toolbox.individual, n=100)
+        toolbox.register("population", tools.initRepeat, list, toolbox.individual, n=POP_SIZE)
 
         toolbox.register("mate", gen_algoth.cross)
         toolbox.register("mutate", gen_algoth.mutate)
@@ -331,9 +334,12 @@ class gen_algoth:
         for ind, fit in zip(invalid, fitnesses):
             ind.fitness = fit
         
+        total_fitness = 0
         for g in range(NGEN):
-            sys.stdout.write("\rRunning generation " + str(g) + "\033[K")
+            sys.stdout.write("\rRunning generation " + str(g) + " Average Fitness: {}".format(total_fitness/POP_SIZE) + "\033[K")
             offspring = toolbox.select(pop, len(pop))
+    
+            total_fitness = 0
 
             # Clone selected
             offspring = list(map(toolbox.clone, offspring))
@@ -356,6 +362,7 @@ class gen_algoth:
 
             # Replace the population with the offspring
             pop[:] = offspring
+            total_fitness = sum([ind.fitness for ind in pop])
         print("")
 
         fittest = pop[0]
