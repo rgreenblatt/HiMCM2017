@@ -14,29 +14,11 @@ def difficulty(paths,ground):
    
     for path in paths:
    
-        heights = ground.height_at_coordinates(np.reshape(np.transpose(path),(2,-1,1)))
+        gradients = np.sqrt(np.sum(np.square(ground.gradient_along_path(path)),axis=0))
 
-        grades = []
+        maximum = np.max(gradients)        
 
-        path = deg_to_feet(path)
-
-        for i in range(1,len(path)-1):
-            hm1=heights[i-1]
-            h=heights[i]
-            hp1=heights[i+1]
-            
-            d1=dist(path[i-1],path[i])
-            d2=dist(path[i+1],path[i])
-            
-            #print(d1)
-
-            s1=abs(h-hm1)/d1
-            s2=abs(hp1-h)/d2
-
-            grades.append((s1+s2)/2)
-        maximum = np.max(grades)        
-
-       # print(maximum)
+        print(maximum)
 
         if maximum<0.25:
             out.append(0)

@@ -244,6 +244,17 @@ class terrain:
 		
 		return np.array([gradX,gradY])
 
+	def gradient_along_path(self,coordinate):
+		gradX = np.zeros((coordinate.shape[1]))
+		gradY = np.zeros((coordinate.shape[1]))
+		
+		coordinate = self.sort_by_data_set(coordinate)
+		for area,gradFuncX,gradFuncY in zip(coordinate,self.gradX,self.gradY):
+			gradX[area[1][0]]=gradFuncX(area[0][0],area[0][1],grid=False)
+			gradY[area[1][0]]=gradFuncY(area[0][0],area[0][1],grid=False)
+		
+		return np.array([gradX,gradY])
+
 	def calc_slopes(data_array,data_resolution):
 		gradients = np.gradient(data_array,data_resolution)
 		return gradients

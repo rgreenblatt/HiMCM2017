@@ -11,14 +11,14 @@ from fitness import fitness
 from tMap import Resort_Map
 
 NGEN = 10000
-CXPB = .6
-MUTPB = .3
+CXPB = .3
+MUTPB = .005
 P1 = .1
-P2 = .4
-P3 = .4
-P4 = .4
+P2 = .2
+P3 = .2
+P4 = .2
 BASE_LIFTS = 3
-POP_SIZE = 100
+POP_SIZE = 500
 
 # Organisms will probably be treated as graphs with points representing the entry and exit points
 def mag(a1):
@@ -32,9 +32,6 @@ class gen_algoth:
 
     def call_fitness(individual):
         gen_algoth.run_count += 1
-        print(gen_algoth.run_count)
-        if len(np.array(individual.chair_set).shape) < 3:
-                print(np.array(individual.chair_set).shape)
         return fitness(individual, gen_algoth.GROUND)
 
     def mutate(child):
@@ -44,13 +41,10 @@ class gen_algoth:
             gen_algoth.mutate1(child)
         if random.random() < P2:
             gen_algoth.mutate2(child)
-        '''
         if random.random() < P3:
             gen_algoth.mutate3(child)
         if random.random() < P4:
             gen_algoth.mutate4(child)
-        '''
-        pass
 
     def mutate1(child): # Add/Remove Ski Lift
         choice = random.randint(0,1)
@@ -87,7 +81,7 @@ class gen_algoth:
                 tmp = np.array([nearest, lower])
                 child.make_path(tmp)
         else:
-            if(BASE_LIFTS<len(child.chair_set)-1):
+            if BASE_LIFTS < len(child.chair_set):
                 child.rem_chair()
             
         
@@ -96,17 +90,12 @@ class gen_algoth:
         if choice: # Add Trail
             trails = random.randint(1,4)
             for i in range(trails):
-                chair = child.chair_set[random.randint(0, len(child.chair_set)-1)]
+                chair = child.chair_set[np.random.randint(len(child.chair_set))]
                 child.make_path(chair)
         else:
-            trails = random.randint(1,3)
-            for i in range(trails):
-                if child.trail_set:
-                    child.trail_set.pop(random.randint(0, len(child.trail_set)-1))
+            if len(child.trail_set) > 2:
+                child.trail_set.pop(np.random.randint(len(child.trail_set)))
         
-        if len(np.array(child.chair_set).shape) < 3:
-                print(np.array(child.chair_set).shape)
-
 
     def mutate3(child): # Add/Remove Midpoints
         if len(child.trail_set) > 0:
@@ -115,12 +104,12 @@ class gen_algoth:
             trail = child.trail_set[index]
             if choice: # Add Midpoint
                 spline = path_lib.paths()
-                spline.set_points(np.transpose(np.array(trail)))
-                new_point = spline.find_point(random.random())
-                trail.append(new_point)
+                index = np.random.randint(trail.shape[1]-1)
+                new_point = [(trail[0,index]+trail[0,index+1])/2,(trail[1,index]+trail[1,index+1])/2]
+                trail = list(trail).insert(index,new_point)
             else:
                 if len(trail) > 2:
-                    ind = random.randint(1, len(trail) - 2)
+                    ind = np.random.randint(1,len(trail)-2)
                     trail.pop(ind)
         else: print("No Trails (Mut3)")
         
@@ -152,12 +141,6 @@ class gen_algoth:
         parent2.chair_set = child2.chair_set
 
     def cross_helper(parent1,parent2):
-        if(len(np.array(parent1.trail_set).shape)<3):
-                print(np.array(parent1.trail_set).shape)
-                print(parent1.trail_set)
-        if(len(np.array(parent2.trail_set).shape)<3):
-                print(np.array(parent2.trail_set).shape)
-                print(parent2.trail_set)
         chrlens=(len(parent1.chair_set),len(parent2.chair_set))
         chrlen=chrlens[random.randint(0,1)]
         
@@ -191,13 +174,8 @@ class gen_algoth:
                         currtrail=parent[i]
                         for inds in watched:
                                 toWatch = child.chair_set[inds[0]][inds[1]]
-                                if mag(toWatch - currtrail[0]) < .0001:
+                                if mag(toWatch - currtrail[:,0]) < .0001:
                                         child.trail_set.append(currtrail)
-
-        print(np.array(child.trail_set).shape)
-        if(len(np.array(child.trail_set).shape)<3):
-                print(np.array(child.trail_set).shape)
-                print(child.trail_set)
         return child
 
     def chair_location(num_chairs):

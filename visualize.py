@@ -102,7 +102,7 @@ def visualize_resort(ground,resort,image_resolution=(512,512)):
     for lift in resort.chair_set:
         lift_line = path_lib(lift)
         points = np.transpose(lift_line.calc_locations(200))
-        ax.plot(points[0],points[1],color='red',lw=2)
+        ax.plot(points[0],points[1],color='red',lw=4)
 
     print("Adding slopes")
     
@@ -112,9 +112,13 @@ def visualize_resort(ground,resort,image_resolution=(512,512)):
     
     difficulties = difficulty(point_arrays,ground)
     
-    for difficulty 
-        
-        ax.plot(points[0],points[1],color='red',lw=2)
+    for difficulty,points in zip(difficulties,point_arrays): 
+        if difficulty == 0:
+            ax.plot(points[0],points[1],color='green',lw=2)
+        elif difficult == 1:
+            ax.plot(points[0],points[1],color='blue',lw=2)
+        elif difficult == 2:
+            ax.plot(points[0,points[1],color='black',lw=2
 
     print("Showing plot")
     plt.ylabel('Latitude Degrees North')
